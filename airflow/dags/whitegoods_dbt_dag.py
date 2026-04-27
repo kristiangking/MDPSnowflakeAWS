@@ -10,9 +10,9 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.utils.dates import days_ago
 
-DBT_PROJECT_DIR = "/home/ec2-user/dbt/whitegoods_inventory"
-DBT_PROFILES_DIR = "/home/ec2-user/.dbt"
-DBT_BIN = "/usr/local/bin/dbt"
+DBT_PROJECT_DIR = "/opt/airflow/dbt/whitegoods_inventory"
+DBT_PROFILES_DIR = "/home/airflow/.dbt"
+DBT_BIN = "/home/airflow/.local/bin/dbt"
 
 default_args = {
     "owner": "data-platform",
