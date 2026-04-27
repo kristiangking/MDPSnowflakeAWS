@@ -5,7 +5,7 @@ variable "snowflake_account" {
 
 variable "snowflake_user" {
   description = "Snowflake admin user for Terraform"
-  default     = "KKAWSINTERVIEWSKING"
+  default     = "tf_service_user"
 }
 
 variable "snowflake_password" {
@@ -16,4 +16,9 @@ variable "snowflake_password" {
 variable "dbt_service_password" {
   description = "Password for dbt_service_user"
   sensitive   = true
+}
+
+variable "snowflake_iam_role_arn" {
+  description = "ARN of the AWS IAM role Snowflake assumes for S3 access (output from AWS Phase 1 apply). Use placeholder on first apply."
+  default     = "arn:aws:iam::000000000000:role/placeholder"
 }

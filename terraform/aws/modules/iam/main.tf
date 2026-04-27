@@ -1,7 +1,61 @@
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
-# Snowflake credentials in Secrets Manager
+# ── Snowflake storage integration IAM role ─────────────────────
+# Phase 1: created with placeholder trust policy (default variable values)
+# Phase 3: re-applied with real values from Snowflake terraform outputs
+resource "aws_iam_role" "snowflake_s3" {
+  name = "${var.project}-${var.environment}-snowflake-s3-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          AWS = var.snowflake_iam_user_arn
+        }
+        Action = "sts:AssumeRole"
+        Condition = {
+          StringEquals = {
+            "sts:ExternalId" = var.snowflake_external_id
+          }
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Project     = var.project
+    Environment = var.environment
+  }
+}
+
+resource "aws_iam_role_policy" "snowflake_s3" {
+  name = "${var.project}-${var.environment}-snowflake-s3-policy"
+  role = aws_iam_role.snowflake_s3.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:GetObjectVersion",
+          "s3:ListBucket",
+          "s3:GetBucketLocation"
+        ]
+        Resource = [
+          var.raw_bucket_arn,
+          "${var.raw_bucket_arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+# ── Secrets Manager ────────────────────────────────────────────
 resource "aws_secretsmanager_secret" "snowflake" {
   name                    = "${var.project}-${var.environment}-snowflake-creds"
   description             = "Snowflake credentials for dbt service account"

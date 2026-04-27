@@ -179,3 +179,401 @@ resource "snowflake_grant_privileges_to_account_role" "report_wh_reporter" {
     object_name = snowflake_warehouse.report.name
   }
 }
+
+# ── Storage Integration ────────────────────────────────────────
+resource "snowflake_storage_integration" "s3_raw" {
+  name                      = "S3_RAW_INTEGRATION"
+  type                      = "EXTERNAL_STAGE"
+  storage_provider          = "S3"
+  enabled                   = true
+  storage_allowed_locations = ["s3://mdp-raw-landing-kk-277385995606-ap-southeast-2-an/"]
+  storage_aws_role_arn      = var.snowflake_iam_role_arn
+  comment                   = "Allows Snowflake to read from the raw S3 landing bucket"
+}
+
+resource "snowflake_grant_privileges_to_account_role" "integration_usage_loader" {
+  account_role_name = snowflake_account_role.loader.name
+  privileges        = ["USAGE"]
+  on_account_object {
+    object_type = "INTEGRATION"
+    object_name = snowflake_storage_integration.s3_raw.name
+  }
+}
+
+# ── RAW.INVENTORY Schema ───────────────────────────────────────
+resource "snowflake_schema" "inventory" {
+  database = snowflake_database.raw.name
+  name     = "INVENTORY"
+  comment  = "Schema for raw inventory data loaded via Snowpipe"
+}
+
+resource "snowflake_grant_privileges_to_account_role" "inventory_schema_loader" {
+  account_role_name = snowflake_account_role.loader.name
+  privileges        = ["USAGE", "CREATE TABLE", "CREATE STAGE", "CREATE PIPE"]
+  on_schema {
+    schema_name = "${snowflake_database.raw.name}.${snowflake_schema.inventory.name}"
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "inventory_schema_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["USAGE"]
+  on_schema {
+    schema_name = "${snowflake_database.raw.name}.${snowflake_schema.inventory.name}"
+  }
+}
+
+# ── File Format ────────────────────────────────────────────────
+resource "snowflake_file_format" "json_array" {
+  name              = "JSON_ARRAY_FORMAT"
+  database          = snowflake_database.raw.name
+  schema            = snowflake_schema.inventory.name
+  format_type       = "JSON"
+  strip_outer_array = true
+  comment           = "JSON with outer array stripped — used by the inventory events pipe"
+}
+
+# ── External Stage ─────────────────────────────────────────────
+resource "snowflake_stage" "s3_raw" {
+  name                = "S3_RAW_STAGE"
+  database            = snowflake_database.raw.name
+  schema              = snowflake_schema.inventory.name
+  url                 = "s3://mdp-raw-landing-kk-277385995606-ap-southeast-2-an/"
+  storage_integration = snowflake_storage_integration.s3_raw.name
+  comment             = "External stage pointing at the raw S3 landing bucket root"
+}
+
+# ── RAW Tables ─────────────────────────────────────────────────
+# NOTE: Column types must exactly match the existing Snowflake DDL.
+# Before applying, run: SELECT GET_DDL('TABLE', 'RAW.INVENTORY.<TABLE>');
+# If the plan shows unexpected column changes, abort and reconcile types first.
+
+resource "snowflake_table" "products" {
+  database = snowflake_database.raw.name
+  schema   = snowflake_schema.inventory.name
+  name     = "PRODUCTS"
+  comment  = "Raw products reference data loaded via Snowpipe"
+
+  lifecycle { prevent_destroy = true }
+
+  column { name = "PRODUCT_ID"    type = "VARCHAR(16777216)" nullable = false }
+  column { name = "SKU"           type = "VARCHAR(16777216)" nullable = true }
+  column { name = "NAME"          type = "VARCHAR(16777216)" nullable = true }
+  column { name = "CATEGORY"      type = "VARCHAR(16777216)" nullable = true }
+  column { name = "BRAND"         type = "VARCHAR(16777216)" nullable = true }
+  column { name = "SUPPLIER_ID"   type = "VARCHAR(16777216)" nullable = true }
+  column { name = "UNIT_COST"     type = "FLOAT"             nullable = true }
+  column { name = "RRP"           type = "FLOAT"             nullable = true }
+  column { name = "REORDER_POINT" type = "NUMBER(38,0)"      nullable = true }
+  column { name = "REORDER_QTY"   type = "NUMBER(38,0)"      nullable = true }
+  column { name = "WEIGHT_KG"     type = "FLOAT"             nullable = true }
+  column {
+    name     = "_LOADED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
+    nullable = true
+    default { expression = "CURRENT_TIMESTAMP()" }
+  }
+}
+
+resource "snowflake_table" "locations" {
+  database = snowflake_database.raw.name
+  schema   = snowflake_schema.inventory.name
+  name     = "LOCATIONS"
+  comment  = "Raw locations reference data loaded via Snowpipe"
+
+  lifecycle { prevent_destroy = true }
+
+  column { name = "LOCATION_ID" type = "VARCHAR(16777216)" nullable = false }
+  column { name = "NAME"        type = "VARCHAR(16777216)" nullable = true }
+  column { name = "TYPE"        type = "VARCHAR(16777216)" nullable = true }
+  column { name = "CITY"        type = "VARCHAR(16777216)" nullable = true }
+  column { name = "STATE"       type = "VARCHAR(16777216)" nullable = true }
+}
+
+resource "snowflake_table" "suppliers" {
+  database = snowflake_database.raw.name
+  schema   = snowflake_schema.inventory.name
+  name     = "SUPPLIERS"
+  comment  = "Raw suppliers reference data loaded via Snowpipe"
+
+  lifecycle { prevent_destroy = true }
+
+  column { name = "SUPPLIER_ID"    type = "VARCHAR(16777216)" nullable = false }
+  column { name = "NAME"           type = "VARCHAR(16777216)" nullable = true }
+  column { name = "LEAD_TIME_DAYS" type = "NUMBER(38,0)"      nullable = true }
+  column { name = "CONTACT_EMAIL"  type = "VARCHAR(16777216)" nullable = true }
+  column { name = "PAYMENT_TERMS"  type = "VARCHAR(16777216)" nullable = true }
+}
+
+resource "snowflake_table" "purchase_orders" {
+  database = snowflake_database.raw.name
+  schema   = snowflake_schema.inventory.name
+  name     = "PURCHASE_ORDERS"
+  comment  = "Raw purchase orders transactional data loaded via Snowpipe"
+
+  lifecycle { prevent_destroy = true }
+
+  column { name = "PO_ID"                  type = "VARCHAR(16777216)" nullable = false }
+  column { name = "SUPPLIER_ID"            type = "VARCHAR(16777216)" nullable = true }
+  column { name = "LOCATION_ID"            type = "VARCHAR(16777216)" nullable = true }
+  column { name = "STATUS"                 type = "VARCHAR(16777216)" nullable = true }
+  column { name = "CREATED_AT"             type = "TIMESTAMP_NTZ(9)"  nullable = true }
+  column { name = "EXPECTED_DELIVERY_DATE" type = "DATE"              nullable = true }
+  column { name = "ACTUAL_DELIVERY_DATE"   type = "DATE"              nullable = true }
+  column { name = "TOTAL_VALUE"            type = "FLOAT"             nullable = true }
+  column {
+    name     = "_LOADED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
+    nullable = true
+    default { expression = "CURRENT_TIMESTAMP()" }
+  }
+}
+
+resource "snowflake_table" "purchase_order_lines" {
+  database = snowflake_database.raw.name
+  schema   = snowflake_schema.inventory.name
+  name     = "PURCHASE_ORDER_LINES"
+  comment  = "Raw purchase order lines transactional data loaded via Snowpipe"
+
+  lifecycle { prevent_destroy = true }
+
+  column { name = "PO_LINE_ID"   type = "VARCHAR(16777216)" nullable = false }
+  column { name = "PO_ID"        type = "VARCHAR(16777216)" nullable = true }
+  column { name = "PRODUCT_ID"   type = "VARCHAR(16777216)" nullable = true }
+  column { name = "QTY_ORDERED"  type = "NUMBER(38,0)"      nullable = true }
+  column { name = "QTY_RECEIVED" type = "NUMBER(38,0)"      nullable = true }
+  column { name = "UNIT_COST"    type = "FLOAT"             nullable = true }
+  column { name = "LINE_TOTAL"   type = "FLOAT"             nullable = true }
+  column {
+    name     = "_LOADED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
+    nullable = true
+    default { expression = "CURRENT_TIMESTAMP()" }
+  }
+}
+
+resource "snowflake_table" "inventory_events" {
+  database = snowflake_database.raw.name
+  schema   = snowflake_schema.inventory.name
+  name     = "INVENTORY_EVENTS"
+  comment  = "Raw inventory events loaded via Snowpipe from JSON files in S3"
+
+  lifecycle { prevent_destroy = true }
+
+  column { name = "EVENT_ID"     type = "VARCHAR(16777216)" nullable = false }
+  column { name = "EVENT_TYPE"   type = "VARCHAR(16777216)" nullable = true }
+  column { name = "PRODUCT_ID"   type = "VARCHAR(16777216)" nullable = true }
+  column { name = "LOCATION_ID"  type = "VARCHAR(16777216)" nullable = true }
+  column { name = "QTY_DELTA"    type = "NUMBER(38,0)"      nullable = true }
+  column { name = "QTY_AFTER"    type = "NUMBER(38,0)"      nullable = true }
+  column { name = "REFERENCE_ID" type = "VARCHAR(16777216)" nullable = true }
+  column { name = "OCCURRED_AT"  type = "TIMESTAMP_NTZ(9)"  nullable = true }
+  column {
+    name     = "_LOADED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
+    nullable = true
+    default { expression = "CURRENT_TIMESTAMP()" }
+  }
+}
+
+# Grant SELECT on all RAW.INVENTORY tables to TRANSFORMER
+resource "snowflake_grant_privileges_to_account_role" "raw_tables_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    all {
+      object_type_plural = "TABLES"
+      in_schema          = "${snowflake_database.raw.name}.${snowflake_schema.inventory.name}"
+    }
+  }
+}
+
+# ── Snowpipes ──────────────────────────────────────────────────
+resource "snowflake_pipe" "products" {
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.inventory.name
+  name        = "PIPE_PRODUCTS"
+  auto_ingest = true
+  comment     = "Snowpipe — loads products CSV files from S3 reference/products/"
+
+  copy_statement = <<-SQL
+    COPY INTO RAW.inventory.products (
+        product_id, sku, name, category, brand, supplier_id,
+        unit_cost, rrp, reorder_point, reorder_qty, weight_kg
+      )
+      FROM @RAW.inventory.s3_raw_stage/reference/products/
+  SQL
+}
+
+resource "snowflake_pipe" "locations" {
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.inventory.name
+  name        = "PIPE_LOCATIONS"
+  auto_ingest = true
+  comment     = "Snowpipe — loads locations CSV files from S3 reference/locations/"
+
+  copy_statement = <<-SQL
+    COPY INTO RAW.inventory.locations (
+        location_id, name, type, city, state
+      )
+      FROM @RAW.inventory.s3_raw_stage/reference/locations/
+  SQL
+}
+
+resource "snowflake_pipe" "suppliers" {
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.inventory.name
+  name        = "PIPE_SUPPLIERS"
+  auto_ingest = true
+  comment     = "Snowpipe — loads suppliers CSV files from S3 reference/suppliers/"
+
+  copy_statement = <<-SQL
+    COPY INTO RAW.inventory.suppliers (
+        supplier_id, name, lead_time_days, contact_email, payment_terms
+      )
+      FROM @RAW.inventory.s3_raw_stage/reference/suppliers/
+  SQL
+}
+
+resource "snowflake_pipe" "purchase_orders" {
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.inventory.name
+  name        = "PIPE_PURCHASE_ORDERS"
+  auto_ingest = true
+  comment     = "Snowpipe — loads purchase orders CSV files from S3 transactions/purchase_orders/"
+
+  copy_statement = <<-SQL
+    COPY INTO RAW.inventory.purchase_orders (
+        po_id, supplier_id, location_id, status,
+        created_at, expected_delivery_date, actual_delivery_date, total_value
+      )
+      FROM @RAW.inventory.s3_raw_stage/transactions/purchase_orders/
+  SQL
+}
+
+resource "snowflake_pipe" "purchase_order_lines" {
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.inventory.name
+  name        = "PIPE_PURCHASE_ORDER_LINES"
+  auto_ingest = true
+  comment     = "Snowpipe — loads purchase order lines CSV files from S3 transactions/purchase_order_lines/"
+
+  copy_statement = <<-SQL
+    COPY INTO RAW.inventory.purchase_order_lines (
+        po_line_id, po_id, product_id,
+        qty_ordered, qty_received, unit_cost, line_total
+      )
+      FROM @RAW.inventory.s3_raw_stage/transactions/purchase_order_lines/
+  SQL
+}
+
+resource "snowflake_pipe" "inventory_events" {
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.inventory.name
+  name        = "PIPE_INVENTORY_EVENTS"
+  auto_ingest = true
+  comment     = "Snowpipe — loads inventory event JSON files from S3 events/inventory/"
+
+  copy_statement = <<-SQL
+    COPY INTO RAW.inventory.inventory_events (
+        event_id, event_type, product_id, location_id,
+        qty_delta, qty_after, reference_id, occurred_at
+      )
+      FROM (
+        SELECT
+          $1:event_id::VARCHAR,
+          $1:event_type::VARCHAR,
+          $1:product_id::VARCHAR,
+          $1:location_id::VARCHAR,
+          $1:qty_delta::NUMBER,
+          $1:qty_after::NUMBER,
+          $1:reference_id::VARCHAR,
+          $1:occurred_at::TIMESTAMP
+        FROM @RAW.inventory.s3_raw_stage/events/inventory/
+      )
+      FILE_FORMAT = (FORMAT_NAME = 'RAW.inventory.json_array_format')
+  SQL
+}
+
+# ── STREAMLIT_APPS Database ────────────────────────────────────
+resource "snowflake_database" "streamlit_apps" {
+  name    = "STREAMLIT_APPS"
+  comment = "Hosts Snowflake Streamlit dashboard applications"
+}
+
+resource "snowflake_schema" "streamlit_inventory" {
+  database = snowflake_database.streamlit_apps.name
+  name     = "INVENTORY"
+  comment  = "Inventory management Streamlit apps"
+}
+
+# Internal named stage — Streamlit files (streamlit_app.py, environment.yml)
+# are uploaded here after apply via SnowSQL PUT (see README)
+resource "snowflake_stage" "streamlit" {
+  name     = "STREAMLIT_STAGE"
+  database = snowflake_database.streamlit_apps.name
+  schema   = snowflake_schema.streamlit_inventory.name
+  comment  = "Internal stage hosting whitegoods inventory Streamlit app files"
+}
+
+# ── Streamlit app ──────────────────────────────────────────────
+resource "snowflake_streamlit" "whitegoods_dashboard" {
+  database        = snowflake_database.streamlit_apps.name
+  schema          = snowflake_schema.streamlit_inventory.name
+  name            = "WHITEGOODS_INVENTORY_DASHBOARD"
+  stage           = snowflake_stage.streamlit.name
+  main_file       = "streamlit_app.py"
+  query_warehouse = snowflake_warehouse.report.name
+  title           = "Whitegoods Inventory Dashboard"
+  comment         = "Whitegoods inventory management dashboard — queries ANALYTICS.marts"
+}
+
+# ── STREAMLIT_APPS grants ──────────────────────────────────────
+resource "snowflake_grant_privileges_to_account_role" "streamlit_apps_db_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges        = ["USAGE"]
+  on_account_object {
+    object_type = "DATABASE"
+    object_name = snowflake_database.streamlit_apps.name
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "streamlit_apps_schema_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges        = ["USAGE"]
+  on_schema {
+    schema_name = "${snowflake_database.streamlit_apps.name}.${snowflake_schema.streamlit_inventory.name}"
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "streamlit_usage_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges        = ["USAGE"]
+  on_schema_object {
+    object_type = "STREAMLIT"
+    object_name = "${snowflake_database.streamlit_apps.name}.${snowflake_schema.streamlit_inventory.name}.${snowflake_streamlit.whitegoods_dashboard.name}"
+  }
+}
+
+# ── ANALYTICS.MARTS grants for REPORTER ───────────────────────
+# Allows the Streamlit dashboard to query mart models via the REPORTER role.
+# Note: ANALYTICS.MARTS schema is created by dbt — run dbt at least once
+# before applying these grants, or they will fail with "schema does not exist".
+resource "snowflake_grant_privileges_to_account_role" "analytics_marts_schema_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges        = ["USAGE"]
+  on_schema {
+    schema_name = "${snowflake_database.analytics.name}.MARTS"
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "analytics_marts_tables_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    all {
+      object_type_plural = "TABLES"
+      in_schema          = "${snowflake_database.analytics.name}.MARTS"
+    }
+  }
+}
