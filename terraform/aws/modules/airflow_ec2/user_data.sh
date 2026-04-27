@@ -15,8 +15,12 @@ usermod -aG docker ec2-user
 curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 
-# Install dbt
-pip3 install dbt-snowflake
+# Add 2GB swap to prevent OOM on t3.small
+fallocate -l 2G /swapfile
+chmod 600 /swapfile
+mkswap /swapfile
+swapon /swapfile
+echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
 # Create Airflow directory structure
 mkdir -p /home/ec2-user/airflow/{dags,logs,plugins}
@@ -34,6 +38,15 @@ cat > /home/ec2-user/airflow/.env << 'ENVFILE'
 AIRFLOW_UID=50000
 ENVFILE
 
+# Create a custom Airflow image with dbt-snowflake baked in
+cat > /home/ec2-user/airflow/Dockerfile << 'DOCKERFILE'
+FROM apache/airflow:2.10.3
+RUN pip install dbt-snowflake
+DOCKERFILE
+
+# Build the custom image
+docker build -t airflow-dbt:2.10.3 /home/ec2-user/airflow/
+
 # Create Docker Compose file
 cat > /home/ec2-user/airflow/docker-compose.yml << 'COMPOSE'
 services:
@@ -48,7 +61,7 @@ services:
     restart: always
 
   airflow-init:
-    image: apache/airflow:2.10.3
+    image: airflow-dbt:2.10.3
     user: "50000:0"
     depends_on:
       - postgres
@@ -65,7 +78,7 @@ services:
     command: -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true"
 
   webserver:
-    image: apache/airflow:2.10.3
+    image: airflow-dbt:2.10.3
     user: "50000:0"
     depends_on:
       - postgres
@@ -90,7 +103,7 @@ services:
       retries: 5
 
   scheduler:
-    image: apache/airflow:2.10.3
+    image: airflow-dbt:2.10.3
     user: "50000:0"
     depends_on:
       - postgres
@@ -111,7 +124,8 @@ volumes:
 COMPOSE
 
 chown ec2-user:ec2-user /home/ec2-user/airflow/docker-compose.yml \
-                         /home/ec2-user/airflow/.env
+                         /home/ec2-user/airflow/.env \
+                         /home/ec2-user/airflow/Dockerfile
 
 # Initialise and start Airflow
 cd /home/ec2-user/airflow
