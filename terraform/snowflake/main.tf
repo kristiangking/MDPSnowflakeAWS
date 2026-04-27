@@ -1,17 +1,18 @@
 terraform {
   required_providers {
     snowflake = {
-      source  = "Snowflake-Labs/snowflake"
+      source  = "snowflakedb/snowflake"
       version = "~> 0.98"
     }
   }
 }
 
 provider "snowflake" {
-  account  = var.snowflake_account
-  username = var.snowflake_user
-  password = var.snowflake_password
-  role     = "SYSADMIN"
+  organization_name = split("-", var.snowflake_account)[0]
+  account_name      = split("-", var.snowflake_account)[1]
+  user              = var.snowflake_user
+  password          = var.snowflake_password
+  role              = "SYSADMIN"
 }
 
 # ── Databases ──────────────────────────────────────────────────
@@ -31,20 +32,22 @@ resource "snowflake_database" "analytics" {
 }
 
 # ── Warehouses ─────────────────────────────────────────────────
-resource "snowflake_warehouse" "load" {
-  name           = "LOAD_WH"
-  warehouse_size = "X-SMALL"
-  auto_suspend   = 60
-  auto_resume    = true
-  comment        = "Used by Snowpipe and data loaders"
+resource "snowflake_warehouse" "loading" {
+  name                      = "LOADING_WH"
+  warehouse_size            = "X-SMALL"
+  auto_suspend              = 60
+  auto_resume               = true
+  enable_query_acceleration = false
+  comment                   = "Used by Snowpipe and data loaders"
 }
 
 resource "snowflake_warehouse" "transform" {
-  name           = "TRANSFORM_WH"
-  warehouse_size = "X-SMALL"
-  auto_suspend   = 60
-  auto_resume    = true
-  comment        = "Used by dbt transformations"
+  name                      = "TRANSFORM_WH"
+  warehouse_size            = "SMALL"
+  auto_suspend              = 120
+  auto_resume               = true
+  enable_query_acceleration = false
+  comment                   = "Used by dbt transformations"
 }
 
 resource "snowflake_warehouse" "report" {
@@ -56,99 +59,123 @@ resource "snowflake_warehouse" "report" {
 }
 
 # ── Roles ──────────────────────────────────────────────────────
-resource "snowflake_role" "loader" {
+resource "snowflake_account_role" "loader" {
   name    = "LOADER"
   comment = "Used by Snowpipe and ingestion processes"
 }
 
-resource "snowflake_role" "transformer" {
+resource "snowflake_account_role" "transformer" {
   name    = "TRANSFORMER"
   comment = "Used by dbt to run transformations"
 }
 
-resource "snowflake_role" "reporter" {
+resource "snowflake_account_role" "reporter" {
   name    = "REPORTER"
   comment = "Used by dashboards and Streamlit apps"
 }
 
-# ── Role hierarchy ─────────────────────────────────────────────
-resource "snowflake_role_grants" "loader_to_sysadmin" {
-  role_name = snowflake_role.loader.name
-  roles     = ["SYSADMIN"]
+# ── Role hierarchy — grant custom roles up to SYSADMIN ─────────
+resource "snowflake_grant_account_role" "loader_to_sysadmin" {
+  role_name        = snowflake_account_role.loader.name
+  parent_role_name = "SYSADMIN"
 }
 
-resource "snowflake_role_grants" "transformer_to_sysadmin" {
-  role_name = snowflake_role.transformer.name
-  roles     = ["SYSADMIN"]
+resource "snowflake_grant_account_role" "transformer_to_sysadmin" {
+  role_name        = snowflake_account_role.transformer.name
+  parent_role_name = "SYSADMIN"
 }
 
-resource "snowflake_role_grants" "reporter_to_sysadmin" {
-  role_name = snowflake_role.reporter.name
-  roles     = ["SYSADMIN"]
+resource "snowflake_grant_account_role" "reporter_to_sysadmin" {
+  role_name        = snowflake_account_role.reporter.name
+  parent_role_name = "SYSADMIN"
 }
 
 # ── Service user ───────────────────────────────────────────────
 resource "snowflake_user" "dbt_service_user" {
-  name         = "dbt_service_user"
-  password     = var.dbt_service_password
-  default_role = snowflake_role.transformer.name
+  name                 = "DBT_SERVICE_USER"
+  password             = var.dbt_service_password
+  default_role         = snowflake_account_role.transformer.name
   must_change_password = false
-  comment      = "Service account for dbt — no MFA"
+  comment              = "Service account for dbt — no MFA"
 }
 
-resource "snowflake_role_grants" "transformer_to_dbt_user" {
-  role_name = snowflake_role.transformer.name
-  users     = [snowflake_user.dbt_service_user.name]
+resource "snowflake_grant_account_role" "transformer_to_dbt_user" {
+  role_name = snowflake_account_role.transformer.name
+  user_name = snowflake_user.dbt_service_user.name
 }
 
 # ── RAW database grants ────────────────────────────────────────
-resource "snowflake_database_grant" "raw_loader" {
-  database_name = snowflake_database.raw.name
-  privilege     = "USAGE"
-  roles         = [snowflake_role.loader.name]
+resource "snowflake_grant_privileges_to_account_role" "raw_usage_loader" {
+  account_role_name = snowflake_account_role.loader.name
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "DATABASE"
+    object_name = snowflake_database.raw.name
+  }
 }
 
-resource "snowflake_database_grant" "raw_transformer" {
-  database_name = snowflake_database.raw.name
-  privilege     = "USAGE"
-  roles         = [snowflake_role.transformer.name]
+resource "snowflake_grant_privileges_to_account_role" "raw_usage_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "DATABASE"
+    object_name = snowflake_database.raw.name
+  }
 }
 
 # ── TRANSFORM database grants ──────────────────────────────────
-resource "snowflake_database_grant" "transform_transformer" {
-  database_name = snowflake_database.transform.name
-  privilege     = "USAGE"
-  roles         = [snowflake_role.transformer.name]
+resource "snowflake_grant_privileges_to_account_role" "transform_usage_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "DATABASE"
+    object_name = snowflake_database.transform.name
+  }
 }
 
 # ── ANALYTICS database grants ──────────────────────────────────
-resource "snowflake_database_grant" "analytics_transformer" {
-  database_name = snowflake_database.analytics.name
-  privilege     = "USAGE"
-  roles         = [snowflake_role.transformer.name]
+resource "snowflake_grant_privileges_to_account_role" "analytics_usage_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "DATABASE"
+    object_name = snowflake_database.analytics.name
+  }
 }
 
-resource "snowflake_database_grant" "analytics_reporter" {
-  database_name = snowflake_database.analytics.name
-  privilege     = "USAGE"
-  roles         = [snowflake_role.reporter.name]
+resource "snowflake_grant_privileges_to_account_role" "analytics_usage_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "DATABASE"
+    object_name = snowflake_database.analytics.name
+  }
 }
 
 # ── Warehouse grants ───────────────────────────────────────────
-resource "snowflake_warehouse_grant" "load_wh_loader" {
-  warehouse_name = snowflake_warehouse.load.name
-  privilege      = "USAGE"
-  roles          = [snowflake_role.loader.name]
+resource "snowflake_grant_privileges_to_account_role" "load_wh_loader" {
+  account_role_name = snowflake_account_role.loader.name
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "WAREHOUSE"
+    object_name = snowflake_warehouse.loading.name
+  }
 }
 
-resource "snowflake_warehouse_grant" "transform_wh_transformer" {
-  warehouse_name = snowflake_warehouse.transform.name
-  privilege      = "USAGE"
-  roles          = [snowflake_role.transformer.name]
+resource "snowflake_grant_privileges_to_account_role" "transform_wh_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "WAREHOUSE"
+    object_name = snowflake_warehouse.transform.name
+  }
 }
 
-resource "snowflake_warehouse_grant" "report_wh_reporter" {
-  warehouse_name = snowflake_warehouse.report.name
-  privilege      = "USAGE"
-  roles          = [snowflake_role.reporter.name]
+resource "snowflake_grant_privileges_to_account_role" "report_wh_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges = ["USAGE"]
+  on_account_object {
+    object_type = "WAREHOUSE"
+    object_name = snowflake_warehouse.report.name
+  }
 }
