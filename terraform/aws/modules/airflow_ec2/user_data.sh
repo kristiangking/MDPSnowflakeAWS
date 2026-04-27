@@ -22,6 +22,41 @@ mkswap /swapfile
 swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
+# Clone the repo
+git clone https://github.com/kristiangking/MDPSnowflakeAWS.git /home/ec2-user/MDPSnowflakeAWS
+chown -R ec2-user:ec2-user /home/ec2-user/MDPSnowflakeAWS
+
+# Write dbt profiles.yml (credentials injected via Secrets Manager at runtime — hardcoded here for bootstrap)
+mkdir -p /home/ec2-user/.dbt
+cat > /home/ec2-user/.dbt/profiles.yml << 'PROFILES'
+whitegoods_inventory:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: ZKWOWXY-BB01746
+      user: dbt_service_user
+      password: DbtService2025!
+      role: TRANSFORMER
+      warehouse: TRANSFORM_WH
+      database: TRANSFORM
+      schema: staging
+      threads: 4
+PROFILES
+chown -R ec2-user:ec2-user /home/ec2-user/.dbt
+chmod 600 /home/ec2-user/.dbt/profiles.yml
+
+# Fix dbt writable directory permissions for UID 50000 (Airflow container user)
+mkdir -p /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory/{target,logs,dbt_packages}
+chown -R 50000:0 \
+  /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory/target \
+  /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory/logs \
+  /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory/dbt_packages
+chmod -R 775 \
+  /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory/target \
+  /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory/logs \
+  /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory/dbt_packages
+
 # Create Airflow directory structure
 mkdir -p /home/ec2-user/airflow/{dags,logs,plugins}
 
@@ -32,6 +67,11 @@ chown -R 50000:0 /home/ec2-user/airflow/logs \
 chmod -R 775 /home/ec2-user/airflow/logs \
              /home/ec2-user/airflow/dags \
              /home/ec2-user/airflow/plugins
+
+# Copy DAG from repo into Airflow dags folder
+cp /home/ec2-user/MDPSnowflakeAWS/airflow/dags/whitegoods_dbt_dag.py \
+   /home/ec2-user/airflow/dags/
+chown 50000:0 /home/ec2-user/airflow/dags/whitegoods_dbt_dag.py
 
 # .env tells compose the UID to use for the airflow user inside containers
 cat > /home/ec2-user/airflow/.env << 'ENVFILE'
@@ -74,6 +114,8 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory:/opt/airflow/dbt/whitegoods_inventory
+      - /home/ec2-user/.dbt:/home/airflow/.dbt
     entrypoint: /bin/bash
     command: -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true"
 
@@ -92,6 +134,8 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory:/opt/airflow/dbt/whitegoods_inventory
+      - /home/ec2-user/.dbt:/home/airflow/.dbt
     ports:
       - "8080:8080"
     command: webserver
@@ -116,6 +160,8 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory:/opt/airflow/dbt/whitegoods_inventory
+      - /home/ec2-user/.dbt:/home/airflow/.dbt
     command: scheduler
     restart: always
 
