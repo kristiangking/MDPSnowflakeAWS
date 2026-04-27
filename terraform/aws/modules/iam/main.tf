@@ -3,8 +3,9 @@ data "aws_region" "current" {}
 
 # Snowflake credentials in Secrets Manager
 resource "aws_secretsmanager_secret" "snowflake" {
-  name        = "${var.project}-${var.environment}-snowflake-creds"
-  description = "Snowflake credentials for dbt service account"
+  name                    = "${var.project}-${var.environment}-snowflake-creds"
+  description             = "Snowflake credentials for dbt service account"
+  recovery_window_in_days = 0
 
   tags = {
     Project     = var.project
