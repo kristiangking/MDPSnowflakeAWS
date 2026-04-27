@@ -1,0 +1,1722 @@
+[
+  {
+    "event_id": "EVT-000450",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 57,
+    "reference_id": "SALE-20250301",
+    "occurred_at": "2025-03-01T12:07:00Z"
+  },
+  {
+    "event_id": "EVT-000449",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -4,
+    "qty_after": 142,
+    "reference_id": "SALE-20250301",
+    "occurred_at": "2025-03-01T13:44:00Z"
+  },
+  {
+    "event_id": "EVT-000448",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 34,
+    "reference_id": "SALE-20250301",
+    "occurred_at": "2025-03-01T13:49:00Z"
+  },
+  {
+    "event_id": "EVT-000446",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 62,
+    "reference_id": "SALE-20250301",
+    "occurred_at": "2025-03-01T16:33:00Z"
+  },
+  {
+    "event_id": "EVT-000447",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 44,
+    "reference_id": "SALE-20250301",
+    "occurred_at": "2025-03-01T17:07:00Z"
+  },
+  {
+    "event_id": "EVT-000454",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 84,
+    "reference_id": "SALE-20250302",
+    "occurred_at": "2025-03-02T11:45:00Z"
+  },
+  {
+    "event_id": "EVT-000455",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 152,
+    "reference_id": "SALE-20250302",
+    "occurred_at": "2025-03-02T11:50:00Z"
+  },
+  {
+    "event_id": "EVT-000453",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 141,
+    "reference_id": "SALE-20250302",
+    "occurred_at": "2025-03-02T13:57:00Z"
+  },
+  {
+    "event_id": "EVT-000452",
+    "event_type": "stock_sold",
+    "product_id": "PRD-008",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 42,
+    "reference_id": "SALE-20250302",
+    "occurred_at": "2025-03-02T14:42:00Z"
+  },
+  {
+    "event_id": "EVT-000451",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 43,
+    "reference_id": "SALE-20250302",
+    "occurred_at": "2025-03-02T16:05:00Z"
+  },
+  {
+    "event_id": "EVT-000457",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 60,
+    "reference_id": "SALE-20250303",
+    "occurred_at": "2025-03-03T09:23:00Z"
+  },
+  {
+    "event_id": "EVT-000456",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 13,
+    "reference_id": "SALE-20250303",
+    "occurred_at": "2025-03-03T11:15:00Z"
+  },
+  {
+    "event_id": "EVT-000459",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 88,
+    "reference_id": "SALE-20250303",
+    "occurred_at": "2025-03-03T13:25:00Z"
+  },
+  {
+    "event_id": "EVT-000458",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 41,
+    "reference_id": "SALE-20250303",
+    "occurred_at": "2025-03-03T16:51:00Z"
+  },
+  {
+    "event_id": "EVT-000460",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 82,
+    "reference_id": "SALE-20250303",
+    "occurred_at": "2025-03-03T17:26:00Z"
+  },
+  {
+    "event_id": "EVT-000464",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 80,
+    "reference_id": "SALE-20250304",
+    "occurred_at": "2025-03-04T11:27:00Z"
+  },
+  {
+    "event_id": "EVT-000462",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 39,
+    "reference_id": "SALE-20250304",
+    "occurred_at": "2025-03-04T11:56:00Z"
+  },
+  {
+    "event_id": "EVT-000465",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 81,
+    "reference_id": "SALE-20250304",
+    "occurred_at": "2025-03-04T13:10:00Z"
+  },
+  {
+    "event_id": "EVT-000461",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 2,
+    "reference_id": "SALE-20250304",
+    "occurred_at": "2025-03-04T16:29:00Z"
+  },
+  {
+    "event_id": "EVT-000463",
+    "event_type": "stock_sold",
+    "product_id": "PRD-003",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 10,
+    "reference_id": "SALE-20250304",
+    "occurred_at": "2025-03-04T18:11:00Z"
+  },
+  {
+    "event_id": "EVT-000467",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 58,
+    "reference_id": "SALE-20250305",
+    "occurred_at": "2025-03-05T10:16:00Z"
+  },
+  {
+    "event_id": "EVT-000468",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 157,
+    "reference_id": "SALE-20250305",
+    "occurred_at": "2025-03-05T11:40:00Z"
+  },
+  {
+    "event_id": "EVT-000466",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 79,
+    "reference_id": "SALE-20250305",
+    "occurred_at": "2025-03-05T14:33:00Z"
+  },
+  {
+    "event_id": "EVT-000469",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 150,
+    "reference_id": "SALE-20250305",
+    "occurred_at": "2025-03-05T18:34:00Z"
+  },
+  {
+    "event_id": "EVT-000629",
+    "event_type": "stock_transferred",
+    "product_id": "PRD-011",
+    "location_id": "LOC-001",
+    "qty_delta": -3,
+    "qty_after": 133,
+    "reference_id": "XFER-20250306-LOC-002",
+    "occurred_at": "2025-03-06T07:00:00Z"
+  },
+  {
+    "event_id": "EVT-000631",
+    "event_type": "stock_transferred",
+    "product_id": "PRD-010",
+    "location_id": "LOC-001",
+    "qty_delta": -5,
+    "qty_after": 58,
+    "reference_id": "XFER-20250306-LOC-002",
+    "occurred_at": "2025-03-06T07:00:00Z"
+  },
+  {
+    "event_id": "EVT-000472",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 154,
+    "reference_id": "SALE-20250306",
+    "occurred_at": "2025-03-06T09:52:00Z"
+  },
+  {
+    "event_id": "EVT-000630",
+    "event_type": "stock_transferred",
+    "product_id": "PRD-011",
+    "location_id": "LOC-002",
+    "qty_delta": 3,
+    "qty_after": 20,
+    "reference_id": "XFER-20250306-LOC-002",
+    "occurred_at": "2025-03-06T11:00:00Z"
+  },
+  {
+    "event_id": "EVT-000632",
+    "event_type": "stock_transferred",
+    "product_id": "PRD-010",
+    "location_id": "LOC-002",
+    "qty_delta": 5,
+    "qty_after": 19,
+    "reference_id": "XFER-20250306-LOC-002",
+    "occurred_at": "2025-03-06T11:00:00Z"
+  },
+  {
+    "event_id": "EVT-000470",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 10,
+    "reference_id": "SALE-20250306",
+    "occurred_at": "2025-03-06T11:37:00Z"
+  },
+  {
+    "event_id": "EVT-000471",
+    "event_type": "stock_sold",
+    "product_id": "PRD-003",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 97,
+    "reference_id": "SALE-20250306",
+    "occurred_at": "2025-03-06T18:21:00Z"
+  },
+  {
+    "event_id": "EVT-000475",
+    "event_type": "stock_sold",
+    "product_id": "PRD-007",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 0,
+    "reference_id": "SALE-20250307",
+    "occurred_at": "2025-03-07T13:30:00Z"
+  },
+  {
+    "event_id": "EVT-000474",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 87,
+    "reference_id": "SALE-20250307",
+    "occurred_at": "2025-03-07T16:56:00Z"
+  },
+  {
+    "event_id": "EVT-000473",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 38,
+    "reference_id": "SALE-20250307",
+    "occurred_at": "2025-03-07T18:16:00Z"
+  },
+  {
+    "event_id": "EVT-000478",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -4,
+    "qty_after": 137,
+    "reference_id": "SALE-20250308",
+    "occurred_at": "2025-03-08T11:20:00Z"
+  },
+  {
+    "event_id": "EVT-000477",
+    "event_type": "stock_sold",
+    "product_id": "PRD-007",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 81,
+    "reference_id": "SALE-20250308",
+    "occurred_at": "2025-03-08T11:28:00Z"
+  },
+  {
+    "event_id": "EVT-000480",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 5,
+    "reference_id": "SALE-20250308",
+    "occurred_at": "2025-03-08T11:48:00Z"
+  },
+  {
+    "event_id": "EVT-000479",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 54,
+    "reference_id": "SALE-20250308",
+    "occurred_at": "2025-03-08T14:25:00Z"
+  },
+  {
+    "event_id": "EVT-000476",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 13,
+    "reference_id": "SALE-20250308",
+    "occurred_at": "2025-03-08T16:04:00Z"
+  },
+  {
+    "event_id": "EVT-000483",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 37,
+    "reference_id": "SALE-20250309",
+    "occurred_at": "2025-03-09T11:06:00Z"
+  },
+  {
+    "event_id": "EVT-000481",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 9,
+    "reference_id": "SALE-20250309",
+    "occurred_at": "2025-03-09T12:29:00Z"
+  },
+  {
+    "event_id": "EVT-000482",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 12,
+    "reference_id": "SALE-20250309",
+    "occurred_at": "2025-03-09T13:28:00Z"
+  },
+  {
+    "event_id": "EVT-000484",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 40,
+    "reference_id": "SALE-20250309",
+    "occurred_at": "2025-03-09T15:55:00Z"
+  },
+  {
+    "event_id": "EVT-000489",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 53,
+    "reference_id": "SALE-20250310",
+    "occurred_at": "2025-03-10T09:18:00Z"
+  },
+  {
+    "event_id": "EVT-000492",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 4,
+    "reference_id": "SALE-20250310",
+    "occurred_at": "2025-03-10T09:54:00Z"
+  },
+  {
+    "event_id": "EVT-000488",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 1,
+    "reference_id": "SALE-20250310",
+    "occurred_at": "2025-03-10T10:25:00Z"
+  },
+  {
+    "event_id": "EVT-000485",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 57,
+    "reference_id": "SALE-20250310",
+    "occurred_at": "2025-03-10T11:31:00Z"
+  },
+  {
+    "event_id": "EVT-000487",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 78,
+    "reference_id": "SALE-20250310",
+    "occurred_at": "2025-03-10T13:31:00Z"
+  },
+  {
+    "event_id": "EVT-000491",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 85,
+    "reference_id": "SALE-20250310",
+    "occurred_at": "2025-03-10T13:34:00Z"
+  },
+  {
+    "event_id": "EVT-000486",
+    "event_type": "stock_sold",
+    "product_id": "PRD-003",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 7,
+    "reference_id": "SALE-20250310",
+    "occurred_at": "2025-03-10T16:31:00Z"
+  },
+  {
+    "event_id": "EVT-000490",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 135,
+    "reference_id": "SALE-20250310",
+    "occurred_at": "2025-03-10T18:56:00Z"
+  },
+  {
+    "event_id": "EVT-000494",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 3,
+    "reference_id": "SALE-20250311",
+    "occurred_at": "2025-03-11T09:36:00Z"
+  },
+  {
+    "event_id": "EVT-000493",
+    "event_type": "stock_sold",
+    "product_id": "PRD-007",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 80,
+    "reference_id": "SALE-20250311",
+    "occurred_at": "2025-03-11T13:46:00Z"
+  },
+  {
+    "event_id": "EVT-000495",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 22,
+    "reference_id": "SALE-20250311",
+    "occurred_at": "2025-03-11T17:12:00Z"
+  },
+  {
+    "event_id": "EVT-000501",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 147,
+    "reference_id": "SALE-20250312",
+    "occurred_at": "2025-03-12T09:02:00Z"
+  },
+  {
+    "event_id": "EVT-000498",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 36,
+    "reference_id": "SALE-20250312",
+    "occurred_at": "2025-03-12T11:06:00Z"
+  },
+  {
+    "event_id": "EVT-000499",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 2,
+    "reference_id": "SALE-20250312",
+    "occurred_at": "2025-03-12T11:12:00Z"
+  },
+  {
+    "event_id": "EVT-000502",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 153,
+    "reference_id": "SALE-20250312",
+    "occurred_at": "2025-03-12T11:45:00Z"
+  },
+  {
+    "event_id": "EVT-000497",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 50,
+    "reference_id": "SALE-20250312",
+    "occurred_at": "2025-03-12T17:17:00Z"
+  },
+  {
+    "event_id": "EVT-000500",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 132,
+    "reference_id": "SALE-20250312",
+    "occurred_at": "2025-03-12T17:25:00Z"
+  },
+  {
+    "event_id": "EVT-000496",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 7,
+    "reference_id": "SALE-20250312",
+    "occurred_at": "2025-03-12T17:28:00Z"
+  },
+  {
+    "event_id": "EVT-000633",
+    "event_type": "stock_transferred",
+    "product_id": "PRD-006",
+    "location_id": "LOC-001",
+    "qty_delta": -3,
+    "qty_after": 92,
+    "reference_id": "XFER-20250313-LOC-003",
+    "occurred_at": "2025-03-13T07:00:00Z"
+  },
+  {
+    "event_id": "EVT-000509",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 1,
+    "reference_id": "SALE-20250313",
+    "occurred_at": "2025-03-13T10:26:00Z"
+  },
+  {
+    "event_id": "EVT-000634",
+    "event_type": "stock_transferred",
+    "product_id": "PRD-006",
+    "location_id": "LOC-003",
+    "qty_delta": 3,
+    "qty_after": 10,
+    "reference_id": "XFER-20250313-LOC-003",
+    "occurred_at": "2025-03-13T11:00:00Z"
+  },
+  {
+    "event_id": "EVT-000504",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 4,
+    "reference_id": "SALE-20250313",
+    "occurred_at": "2025-03-13T11:20:00Z"
+  },
+  {
+    "event_id": "EVT-000503",
+    "event_type": "stock_sold",
+    "product_id": "PRD-008",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 41,
+    "reference_id": "SALE-20250313",
+    "occurred_at": "2025-03-13T11:38:00Z"
+  },
+  {
+    "event_id": "EVT-000505",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 9,
+    "reference_id": "SALE-20250313",
+    "occurred_at": "2025-03-13T14:10:00Z"
+  },
+  {
+    "event_id": "EVT-000508",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 131,
+    "reference_id": "SALE-20250313",
+    "occurred_at": "2025-03-13T14:21:00Z"
+  },
+  {
+    "event_id": "EVT-000507",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 39,
+    "reference_id": "SALE-20250313",
+    "occurred_at": "2025-03-13T16:52:00Z"
+  },
+  {
+    "event_id": "EVT-000506",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 83,
+    "reference_id": "SALE-20250313",
+    "occurred_at": "2025-03-13T18:19:00Z"
+  },
+  {
+    "event_id": "EVT-000513",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 81,
+    "reference_id": "SALE-20250314",
+    "occurred_at": "2025-03-14T11:33:00Z"
+  },
+  {
+    "event_id": "EVT-000512",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 33,
+    "reference_id": "SALE-20250314",
+    "occurred_at": "2025-03-14T12:46:00Z"
+  },
+  {
+    "event_id": "EVT-000510",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 6,
+    "reference_id": "SALE-20250314",
+    "occurred_at": "2025-03-14T16:16:00Z"
+  },
+  {
+    "event_id": "EVT-000511",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 10,
+    "reference_id": "SALE-20250314",
+    "occurred_at": "2025-03-14T18:36:00Z"
+  },
+  {
+    "event_id": "EVT-000514",
+    "event_type": "stock_sold",
+    "product_id": "PRD-003",
+    "location_id": "LOC-002",
+    "qty_delta": -4,
+    "qty_after": 3,
+    "reference_id": "SALE-20250315",
+    "occurred_at": "2025-03-15T10:12:00Z"
+  },
+  {
+    "event_id": "EVT-000516",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 54,
+    "reference_id": "SALE-20250315",
+    "occurred_at": "2025-03-15T11:26:00Z"
+  },
+  {
+    "event_id": "EVT-000121",
+    "event_type": "stock_received",
+    "product_id": "PRD-006",
+    "location_id": "LOC-001",
+    "qty_delta": 13,
+    "qty_after": 86,
+    "reference_id": "PO-2025-0029",
+    "occurred_at": "2025-03-15T11:59:00Z"
+  },
+  {
+    "event_id": "EVT-000122",
+    "event_type": "stock_received",
+    "product_id": "PRD-007",
+    "location_id": "LOC-001",
+    "qty_delta": 14,
+    "qty_after": 94,
+    "reference_id": "PO-2025-0029",
+    "occurred_at": "2025-03-15T12:04:00Z"
+  },
+  {
+    "event_id": "EVT-000123",
+    "event_type": "stock_received",
+    "product_id": "PRD-008",
+    "location_id": "LOC-001",
+    "qty_delta": 11,
+    "qty_after": 44,
+    "reference_id": "PO-2025-0029",
+    "occurred_at": "2025-03-15T12:06:00Z"
+  },
+  {
+    "event_id": "EVT-000517",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 32,
+    "reference_id": "SALE-20250315",
+    "occurred_at": "2025-03-15T12:26:00Z"
+  },
+  {
+    "event_id": "EVT-000137",
+    "event_type": "stock_received",
+    "product_id": "PRD-006",
+    "location_id": "LOC-002",
+    "qty_delta": 15,
+    "qty_after": 90,
+    "reference_id": "PO-2025-0035",
+    "occurred_at": "2025-03-15T13:52:00Z"
+  },
+  {
+    "event_id": "EVT-000136",
+    "event_type": "stock_received",
+    "product_id": "PRD-007",
+    "location_id": "LOC-002",
+    "qty_delta": 20,
+    "qty_after": 96,
+    "reference_id": "PO-2025-0035",
+    "occurred_at": "2025-03-15T13:58:00Z"
+  },
+  {
+    "event_id": "EVT-000520",
+    "event_type": "stock_sold",
+    "product_id": "PRD-003",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 94,
+    "reference_id": "SALE-20250315",
+    "occurred_at": "2025-03-15T14:11:00Z"
+  },
+  {
+    "event_id": "EVT-000515",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 9,
+    "reference_id": "SALE-20250315",
+    "occurred_at": "2025-03-15T16:20:00Z"
+  },
+  {
+    "event_id": "EVT-000519",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 21,
+    "reference_id": "SALE-20250315",
+    "occurred_at": "2025-03-15T16:33:00Z"
+  },
+  {
+    "event_id": "EVT-000518",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 130,
+    "reference_id": "SALE-20250315",
+    "occurred_at": "2025-03-15T17:20:00Z"
+  },
+  {
+    "event_id": "EVT-000521",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 144,
+    "reference_id": "SALE-20250315",
+    "occurred_at": "2025-03-15T17:21:00Z"
+  },
+  {
+    "event_id": "EVT-000524",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 49,
+    "reference_id": "SALE-20250316",
+    "occurred_at": "2025-03-16T13:14:00Z"
+  },
+  {
+    "event_id": "EVT-000523",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 5,
+    "reference_id": "SALE-20250316",
+    "occurred_at": "2025-03-16T13:35:00Z"
+  },
+  {
+    "event_id": "EVT-000525",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 38,
+    "reference_id": "SALE-20250316",
+    "occurred_at": "2025-03-16T14:30:00Z"
+  },
+  {
+    "event_id": "EVT-000133",
+    "event_type": "stock_received",
+    "product_id": "PRD-004",
+    "location_id": "LOC-002",
+    "qty_delta": 13,
+    "qty_after": 74,
+    "reference_id": "PO-2025-0033",
+    "occurred_at": "2025-03-16T15:46:00Z"
+  },
+  {
+    "event_id": "EVT-000132",
+    "event_type": "stock_received",
+    "product_id": "PRD-005",
+    "location_id": "LOC-002",
+    "qty_delta": 9,
+    "qty_after": 64,
+    "reference_id": "PO-2025-0033",
+    "occurred_at": "2025-03-16T15:51:00Z"
+  },
+  {
+    "event_id": "EVT-000522",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 8,
+    "reference_id": "SALE-20250316",
+    "occurred_at": "2025-03-16T16:12:00Z"
+  },
+  {
+    "event_id": "EVT-000526",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 52,
+    "reference_id": "SALE-20250316",
+    "occurred_at": "2025-03-16T17:59:00Z"
+  },
+  {
+    "event_id": "EVT-000531",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 79,
+    "reference_id": "SALE-20250317",
+    "occurred_at": "2025-03-17T12:12:00Z"
+  },
+  {
+    "event_id": "EVT-000529",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 0,
+    "reference_id": "SALE-20250317",
+    "occurred_at": "2025-03-17T13:02:00Z"
+  },
+  {
+    "event_id": "EVT-000530",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 128,
+    "reference_id": "SALE-20250317",
+    "occurred_at": "2025-03-17T13:47:00Z"
+  },
+  {
+    "event_id": "EVT-000528",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 34,
+    "reference_id": "SALE-20250317",
+    "occurred_at": "2025-03-17T14:49:00Z"
+  },
+  {
+    "event_id": "EVT-000532",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 0,
+    "reference_id": "SALE-20250317",
+    "occurred_at": "2025-03-17T17:17:00Z"
+  },
+  {
+    "event_id": "EVT-000527",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 48,
+    "reference_id": "SALE-20250317",
+    "occurred_at": "2025-03-17T17:24:00Z"
+  },
+  {
+    "event_id": "EVT-000534",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 33,
+    "reference_id": "SALE-20250318",
+    "occurred_at": "2025-03-18T09:42:00Z"
+  },
+  {
+    "event_id": "EVT-000536",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 77,
+    "reference_id": "SALE-20250318",
+    "occurred_at": "2025-03-18T10:43:00Z"
+  },
+  {
+    "event_id": "EVT-000535",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 20,
+    "reference_id": "SALE-20250318",
+    "occurred_at": "2025-03-18T15:21:00Z"
+  },
+  {
+    "event_id": "EVT-000533",
+    "event_type": "stock_sold",
+    "product_id": "PRD-003",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 0,
+    "reference_id": "SALE-20250318",
+    "occurred_at": "2025-03-18T18:15:00Z"
+  },
+  {
+    "event_id": "EVT-000537",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 31,
+    "reference_id": "SALE-20250319",
+    "occurred_at": "2025-03-19T11:26:00Z"
+  },
+  {
+    "event_id": "EVT-000539",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 37,
+    "reference_id": "SALE-20250319",
+    "occurred_at": "2025-03-19T13:41:00Z"
+  },
+  {
+    "event_id": "EVT-000538",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 1,
+    "reference_id": "SALE-20250319",
+    "occurred_at": "2025-03-19T16:30:00Z"
+  },
+  {
+    "event_id": "EVT-000541",
+    "event_type": "stock_sold",
+    "product_id": "PRD-003",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 92,
+    "reference_id": "SALE-20250320",
+    "occurred_at": "2025-03-20T11:59:00Z"
+  },
+  {
+    "event_id": "EVT-000540",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 32,
+    "reference_id": "SALE-20250320",
+    "occurred_at": "2025-03-20T17:47:00Z"
+  },
+  {
+    "event_id": "EVT-000542",
+    "event_type": "stock_sold",
+    "product_id": "PRD-007",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 78,
+    "reference_id": "SALE-20250321",
+    "occurred_at": "2025-03-21T11:59:00Z"
+  },
+  {
+    "event_id": "EVT-000544",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 127,
+    "reference_id": "SALE-20250321",
+    "occurred_at": "2025-03-21T14:18:00Z"
+  },
+  {
+    "event_id": "EVT-000135",
+    "event_type": "stock_received",
+    "product_id": "PRD-006",
+    "location_id": "LOC-002",
+    "qty_delta": 13,
+    "qty_after": 75,
+    "reference_id": "PO-2025-0034",
+    "occurred_at": "2025-03-21T14:57:00Z"
+  },
+  {
+    "event_id": "EVT-000134",
+    "event_type": "stock_received",
+    "product_id": "PRD-008",
+    "location_id": "LOC-002",
+    "qty_delta": 7,
+    "qty_after": 55,
+    "reference_id": "PO-2025-0034",
+    "occurred_at": "2025-03-21T15:04:00Z"
+  },
+  {
+    "event_id": "EVT-000545",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 36,
+    "reference_id": "SALE-20250321",
+    "occurred_at": "2025-03-21T16:41:00Z"
+  },
+  {
+    "event_id": "EVT-000543",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 19,
+    "reference_id": "SALE-20250321",
+    "occurred_at": "2025-03-21T18:38:00Z"
+  },
+  {
+    "event_id": "EVT-000549",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 18,
+    "reference_id": "SALE-20250322",
+    "occurred_at": "2025-03-22T13:36:00Z"
+  },
+  {
+    "event_id": "EVT-000548",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 47,
+    "reference_id": "SALE-20250322",
+    "occurred_at": "2025-03-22T13:45:00Z"
+  },
+  {
+    "event_id": "EVT-000546",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 0,
+    "reference_id": "SALE-20250322",
+    "occurred_at": "2025-03-22T14:10:00Z"
+  },
+  {
+    "event_id": "EVT-000547",
+    "event_type": "stock_sold",
+    "product_id": "PRD-008",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 40,
+    "reference_id": "SALE-20250322",
+    "occurred_at": "2025-03-22T16:41:00Z"
+  },
+  {
+    "event_id": "EVT-000550",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 143,
+    "reference_id": "SALE-20250323",
+    "occurred_at": "2025-03-23T10:11:00Z"
+  },
+  {
+    "event_id": "EVT-000131",
+    "event_type": "stock_received",
+    "product_id": "PRD-008",
+    "location_id": "LOC-001",
+    "qty_delta": 9,
+    "qty_after": 65,
+    "reference_id": "PO-2025-0032",
+    "occurred_at": "2025-03-23T12:53:00Z"
+  },
+  {
+    "event_id": "EVT-000130",
+    "event_type": "stock_received",
+    "product_id": "PRD-007",
+    "location_id": "LOC-001",
+    "qty_delta": 14,
+    "qty_after": 123,
+    "reference_id": "PO-2025-0032",
+    "occurred_at": "2025-03-23T13:00:00Z"
+  },
+  {
+    "event_id": "EVT-000551",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 76,
+    "reference_id": "SALE-20250323",
+    "occurred_at": "2025-03-23T16:20:00Z"
+  },
+  {
+    "event_id": "EVT-000555",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 17,
+    "reference_id": "SALE-20250324",
+    "occurred_at": "2025-03-24T10:29:00Z"
+  },
+  {
+    "event_id": "EVT-000554",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 125,
+    "reference_id": "SALE-20250324",
+    "occurred_at": "2025-03-24T12:03:00Z"
+  },
+  {
+    "event_id": "EVT-000553",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 35,
+    "reference_id": "SALE-20250324",
+    "occurred_at": "2025-03-24T13:41:00Z"
+  },
+  {
+    "event_id": "EVT-000552",
+    "event_type": "stock_sold",
+    "product_id": "PRD-005",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 46,
+    "reference_id": "SALE-20250324",
+    "occurred_at": "2025-03-24T15:15:00Z"
+  },
+  {
+    "event_id": "EVT-000556",
+    "event_type": "stock_sold",
+    "product_id": "PRD-007",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 76,
+    "reference_id": "SALE-20250325",
+    "occurred_at": "2025-03-25T10:40:00Z"
+  },
+  {
+    "event_id": "EVT-000125",
+    "event_type": "stock_received",
+    "product_id": "PRD-007",
+    "location_id": "LOC-001",
+    "qty_delta": 15,
+    "qty_after": 109,
+    "reference_id": "PO-2025-0030",
+    "occurred_at": "2025-03-25T15:28:00Z"
+  },
+  {
+    "event_id": "EVT-000126",
+    "event_type": "stock_received",
+    "product_id": "PRD-006",
+    "location_id": "LOC-001",
+    "qty_delta": 16,
+    "qty_after": 102,
+    "reference_id": "PO-2025-0030",
+    "occurred_at": "2025-03-25T15:30:00Z"
+  },
+  {
+    "event_id": "EVT-000124",
+    "event_type": "stock_received",
+    "product_id": "PRD-008",
+    "location_id": "LOC-001",
+    "qty_delta": 12,
+    "qty_after": 56,
+    "reference_id": "PO-2025-0030",
+    "occurred_at": "2025-03-25T15:53:00Z"
+  },
+  {
+    "event_id": "EVT-000557",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 80,
+    "reference_id": "SALE-20250325",
+    "occurred_at": "2025-03-25T16:09:00Z"
+  },
+  {
+    "event_id": "EVT-000559",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 151,
+    "reference_id": "SALE-20250325",
+    "occurred_at": "2025-03-25T17:58:00Z"
+  },
+  {
+    "event_id": "EVT-000558",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 50,
+    "reference_id": "SALE-20250325",
+    "occurred_at": "2025-03-25T18:23:00Z"
+  },
+  {
+    "event_id": "EVT-000562",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 79,
+    "reference_id": "SALE-20250326",
+    "occurred_at": "2025-03-26T09:53:00Z"
+  },
+  {
+    "event_id": "EVT-000560",
+    "event_type": "stock_sold",
+    "product_id": "PRD-011",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 5,
+    "reference_id": "SALE-20250326",
+    "occurred_at": "2025-03-26T10:33:00Z"
+  },
+  {
+    "event_id": "EVT-000141",
+    "event_type": "stock_received",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": 20,
+    "qty_after": 133,
+    "reference_id": "PO-2025-0037",
+    "occurred_at": "2025-03-26T11:23:00Z"
+  },
+  {
+    "event_id": "EVT-000143",
+    "event_type": "stock_received",
+    "product_id": "PRD-011",
+    "location_id": "LOC-003",
+    "qty_delta": 24,
+    "qty_after": 124,
+    "reference_id": "PO-2025-0037",
+    "occurred_at": "2025-03-26T11:37:00Z"
+  },
+  {
+    "event_id": "EVT-000142",
+    "event_type": "stock_received",
+    "product_id": "PRD-003",
+    "location_id": "LOC-003",
+    "qty_delta": 20,
+    "qty_after": 93,
+    "reference_id": "PO-2025-0037",
+    "occurred_at": "2025-03-26T11:43:00Z"
+  },
+  {
+    "event_id": "EVT-000561",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-002",
+    "qty_delta": -2,
+    "qty_after": 52,
+    "reference_id": "SALE-20250326",
+    "occurred_at": "2025-03-26T17:45:00Z"
+  },
+  {
+    "event_id": "EVT-000635",
+    "event_type": "stock_transferred",
+    "product_id": "PRD-007",
+    "location_id": "LOC-001",
+    "qty_delta": -4,
+    "qty_after": 113,
+    "reference_id": "XFER-20250327-LOC-003",
+    "occurred_at": "2025-03-27T07:00:00Z"
+  },
+  {
+    "event_id": "EVT-000144",
+    "event_type": "stock_received",
+    "product_id": "PRD-011",
+    "location_id": "LOC-003",
+    "qty_delta": 23,
+    "qty_after": 147,
+    "reference_id": "PO-2025-0038",
+    "occurred_at": "2025-03-27T10:18:00Z"
+  },
+  {
+    "event_id": "EVT-000145",
+    "event_type": "stock_received",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": 24,
+    "qty_after": 157,
+    "reference_id": "PO-2025-0038",
+    "occurred_at": "2025-03-27T10:35:00Z"
+  },
+  {
+    "event_id": "EVT-000564",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 74,
+    "reference_id": "SALE-20250327",
+    "occurred_at": "2025-03-27T10:57:00Z"
+  },
+  {
+    "event_id": "EVT-000636",
+    "event_type": "stock_transferred",
+    "product_id": "PRD-007",
+    "location_id": "LOC-003",
+    "qty_delta": 4,
+    "qty_after": 10,
+    "reference_id": "XFER-20250327-LOC-003",
+    "occurred_at": "2025-03-27T11:00:00Z"
+  },
+  {
+    "event_id": "EVT-000563",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 140,
+    "reference_id": "SALE-20250327",
+    "occurred_at": "2025-03-27T12:45:00Z"
+  },
+  {
+    "event_id": "EVT-000567",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 123,
+    "reference_id": "SALE-20250328",
+    "occurred_at": "2025-03-28T09:47:00Z"
+  },
+  {
+    "event_id": "EVT-000139",
+    "event_type": "stock_received",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": 30,
+    "qty_after": 147,
+    "reference_id": "PO-2025-0036",
+    "occurred_at": "2025-03-28T12:19:00Z"
+  },
+  {
+    "event_id": "EVT-000138",
+    "event_type": "stock_received",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": 22,
+    "qty_after": 114,
+    "reference_id": "PO-2025-0036",
+    "occurred_at": "2025-03-28T12:23:00Z"
+  },
+  {
+    "event_id": "EVT-000568",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 16,
+    "reference_id": "SALE-20250328",
+    "occurred_at": "2025-03-28T12:37:00Z"
+  },
+  {
+    "event_id": "EVT-000140",
+    "event_type": "stock_received",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": 22,
+    "qty_after": 113,
+    "reference_id": "PO-2025-0036",
+    "occurred_at": "2025-03-28T12:39:00Z"
+  },
+  {
+    "event_id": "EVT-000119",
+    "event_type": "stock_received",
+    "product_id": "PRD-003",
+    "location_id": "LOC-001",
+    "qty_delta": 23,
+    "qty_after": 123,
+    "reference_id": "PO-2025-0028",
+    "occurred_at": "2025-03-28T14:48:00Z"
+  },
+  {
+    "event_id": "EVT-000120",
+    "event_type": "stock_received",
+    "product_id": "PRD-011",
+    "location_id": "LOC-001",
+    "qty_delta": 28,
+    "qty_after": 148,
+    "reference_id": "PO-2025-0028",
+    "occurred_at": "2025-03-28T14:55:00Z"
+  },
+  {
+    "event_id": "EVT-000565",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 30,
+    "reference_id": "SALE-20250328",
+    "occurred_at": "2025-03-28T15:29:00Z"
+  },
+  {
+    "event_id": "EVT-000566",
+    "event_type": "stock_sold",
+    "product_id": "PRD-008",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 39,
+    "reference_id": "SALE-20250328",
+    "occurred_at": "2025-03-28T18:03:00Z"
+  },
+  {
+    "event_id": "EVT-000570",
+    "event_type": "stock_sold",
+    "product_id": "PRD-002",
+    "location_id": "LOC-003",
+    "qty_delta": -3,
+    "qty_after": 71,
+    "reference_id": "SALE-20250329",
+    "occurred_at": "2025-03-29T09:18:00Z"
+  },
+  {
+    "event_id": "EVT-000569",
+    "event_type": "stock_sold",
+    "product_id": "PRD-007",
+    "location_id": "LOC-002",
+    "qty_delta": -3,
+    "qty_after": 73,
+    "reference_id": "SALE-20250329",
+    "occurred_at": "2025-03-29T10:34:00Z"
+  },
+  {
+    "event_id": "EVT-000129",
+    "event_type": "stock_received",
+    "product_id": "PRD-004",
+    "location_id": "LOC-001",
+    "qty_delta": 17,
+    "qty_after": 118,
+    "reference_id": "PO-2025-0031",
+    "occurred_at": "2025-03-29T12:21:00Z"
+  },
+  {
+    "event_id": "EVT-000127",
+    "event_type": "stock_received",
+    "product_id": "PRD-001",
+    "location_id": "LOC-001",
+    "qty_delta": 11,
+    "qty_after": 101,
+    "reference_id": "PO-2025-0031",
+    "occurred_at": "2025-03-29T12:26:00Z"
+  },
+  {
+    "event_id": "EVT-000128",
+    "event_type": "stock_received",
+    "product_id": "PRD-002",
+    "location_id": "LOC-001",
+    "qty_delta": 18,
+    "qty_after": 140,
+    "reference_id": "PO-2025-0031",
+    "occurred_at": "2025-03-29T12:36:00Z"
+  },
+  {
+    "event_id": "EVT-000149",
+    "event_type": "stock_received",
+    "product_id": "PRD-003",
+    "location_id": "LOC-003",
+    "qty_delta": 25,
+    "qty_after": 118,
+    "reference_id": "PO-2025-0039",
+    "occurred_at": "2025-03-29T15:33:00Z"
+  },
+  {
+    "event_id": "EVT-000147",
+    "event_type": "stock_received",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": 23,
+    "qty_after": 170,
+    "reference_id": "PO-2025-0039",
+    "occurred_at": "2025-03-29T15:35:00Z"
+  },
+  {
+    "event_id": "EVT-000146",
+    "event_type": "stock_received",
+    "product_id": "PRD-012",
+    "location_id": "LOC-003",
+    "qty_delta": 22,
+    "qty_after": 179,
+    "reference_id": "PO-2025-0039",
+    "occurred_at": "2025-03-29T15:40:00Z"
+  },
+  {
+    "event_id": "EVT-000148",
+    "event_type": "stock_received",
+    "product_id": "PRD-011",
+    "location_id": "LOC-003",
+    "qty_delta": 29,
+    "qty_after": 176,
+    "reference_id": "PO-2025-0039",
+    "occurred_at": "2025-03-29T15:41:00Z"
+  },
+  {
+    "event_id": "EVT-000574",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 139,
+    "reference_id": "SALE-20250330",
+    "occurred_at": "2025-03-30T11:46:00Z"
+  },
+  {
+    "event_id": "EVT-000573",
+    "event_type": "stock_sold",
+    "product_id": "PRD-006",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 77,
+    "reference_id": "SALE-20250330",
+    "occurred_at": "2025-03-30T14:07:00Z"
+  },
+  {
+    "event_id": "EVT-000571",
+    "event_type": "stock_sold",
+    "product_id": "PRD-012",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 4,
+    "reference_id": "SALE-20250330",
+    "occurred_at": "2025-03-30T15:24:00Z"
+  },
+  {
+    "event_id": "EVT-000572",
+    "event_type": "stock_sold",
+    "product_id": "PRD-007",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 72,
+    "reference_id": "SALE-20250330",
+    "occurred_at": "2025-03-30T17:08:00Z"
+  },
+  {
+    "event_id": "EVT-000577",
+    "event_type": "stock_sold",
+    "product_id": "PRD-004",
+    "location_id": "LOC-003",
+    "qty_delta": -1,
+    "qty_after": 49,
+    "reference_id": "SALE-20250331",
+    "occurred_at": "2025-03-31T10:02:00Z"
+  },
+  {
+    "event_id": "EVT-000575",
+    "event_type": "stock_sold",
+    "product_id": "PRD-001",
+    "location_id": "LOC-002",
+    "qty_delta": -1,
+    "qty_after": 29,
+    "reference_id": "SALE-20250331",
+    "occurred_at": "2025-03-31T13:29:00Z"
+  },
+  {
+    "event_id": "EVT-000576",
+    "event_type": "stock_sold",
+    "product_id": "PRD-009",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 137,
+    "reference_id": "SALE-20250331",
+    "occurred_at": "2025-03-31T14:09:00Z"
+  },
+  {
+    "event_id": "EVT-000578",
+    "event_type": "stock_sold",
+    "product_id": "PRD-010",
+    "location_id": "LOC-003",
+    "qty_delta": -2,
+    "qty_after": 77,
+    "reference_id": "SALE-20250331",
+    "occurred_at": "2025-03-31T18:49:00Z"
+  }
+]

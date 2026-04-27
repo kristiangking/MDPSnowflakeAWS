@@ -1,0 +1,16 @@
+# dbt
+dbt/whitegoods_inventory/target/
+dbt/whitegoods_inventory/dbt_packages/
+dbt/whitegoods_inventory/logs/
+dbt/whitegoods_inventory/venv/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
+
+# General
+.env
+.DS_Store
