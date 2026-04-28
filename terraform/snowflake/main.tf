@@ -186,7 +186,7 @@ resource "snowflake_storage_integration" "s3_raw" {
   type                      = "EXTERNAL_STAGE"
   storage_provider          = "S3"
   enabled                   = true
-  storage_allowed_locations = ["s3://mdp-raw-landing-kk-277385995606-ap-southeast-2-an/"]
+  storage_allowed_locations = ["s3://mdp-raw-landing-kk-277385995606-ap-southeast-2/"]
   storage_aws_role_arn      = var.snowflake_iam_role_arn
   comment                   = "Allows Snowflake to read from the raw S3 landing bucket"
 }
@@ -238,7 +238,7 @@ resource "snowflake_stage" "s3_raw" {
   name                = "S3_RAW_STAGE"
   database            = snowflake_database.raw.name
   schema              = snowflake_schema.inventory.name
-  url                 = "s3://mdp-raw-landing-kk-277385995606-ap-southeast-2-an/"
+  url                 = "s3://mdp-raw-landing-kk-277385995606-ap-southeast-2/"
   storage_integration = snowflake_storage_integration.s3_raw.name
   comment             = "External stage pointing at the raw S3 landing bucket root"
 }
@@ -256,17 +256,61 @@ resource "snowflake_table" "products" {
 
   lifecycle { prevent_destroy = true }
 
-  column { name = "PRODUCT_ID"    type = "VARCHAR(16777216)" nullable = false }
-  column { name = "SKU"           type = "VARCHAR(16777216)" nullable = true }
-  column { name = "NAME"          type = "VARCHAR(16777216)" nullable = true }
-  column { name = "CATEGORY"      type = "VARCHAR(16777216)" nullable = true }
-  column { name = "BRAND"         type = "VARCHAR(16777216)" nullable = true }
-  column { name = "SUPPLIER_ID"   type = "VARCHAR(16777216)" nullable = true }
-  column { name = "UNIT_COST"     type = "FLOAT"             nullable = true }
-  column { name = "RRP"           type = "FLOAT"             nullable = true }
-  column { name = "REORDER_POINT" type = "NUMBER(38,0)"      nullable = true }
-  column { name = "REORDER_QTY"   type = "NUMBER(38,0)"      nullable = true }
-  column { name = "WEIGHT_KG"     type = "FLOAT"             nullable = true }
+  column {
+    name     = "PRODUCT_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "SKU"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "NAME"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "CATEGORY"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "BRAND"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "SUPPLIER_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "UNIT_COST"
+    type     = "FLOAT"
+    nullable = true
+  }
+  column {
+    name     = "RRP"
+    type     = "FLOAT"
+    nullable = true
+  }
+  column {
+    name     = "REORDER_POINT"
+    type     = "NUMBER(38,0)"
+    nullable = true
+  }
+  column {
+    name     = "REORDER_QTY"
+    type     = "NUMBER(38,0)"
+    nullable = true
+  }
+  column {
+    name     = "WEIGHT_KG"
+    type     = "FLOAT"
+    nullable = true
+  }
   column {
     name     = "_LOADED_AT"
     type     = "TIMESTAMP_LTZ(9)"
@@ -283,11 +327,31 @@ resource "snowflake_table" "locations" {
 
   lifecycle { prevent_destroy = true }
 
-  column { name = "LOCATION_ID" type = "VARCHAR(16777216)" nullable = false }
-  column { name = "NAME"        type = "VARCHAR(16777216)" nullable = true }
-  column { name = "TYPE"        type = "VARCHAR(16777216)" nullable = true }
-  column { name = "CITY"        type = "VARCHAR(16777216)" nullable = true }
-  column { name = "STATE"       type = "VARCHAR(16777216)" nullable = true }
+  column {
+    name     = "LOCATION_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "NAME"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "TYPE"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "CITY"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "STATE"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
 }
 
 resource "snowflake_table" "suppliers" {
@@ -298,11 +362,31 @@ resource "snowflake_table" "suppliers" {
 
   lifecycle { prevent_destroy = true }
 
-  column { name = "SUPPLIER_ID"    type = "VARCHAR(16777216)" nullable = false }
-  column { name = "NAME"           type = "VARCHAR(16777216)" nullable = true }
-  column { name = "LEAD_TIME_DAYS" type = "NUMBER(38,0)"      nullable = true }
-  column { name = "CONTACT_EMAIL"  type = "VARCHAR(16777216)" nullable = true }
-  column { name = "PAYMENT_TERMS"  type = "VARCHAR(16777216)" nullable = true }
+  column {
+    name     = "SUPPLIER_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "NAME"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "LEAD_TIME_DAYS"
+    type     = "NUMBER(38,0)"
+    nullable = true
+  }
+  column {
+    name     = "CONTACT_EMAIL"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "PAYMENT_TERMS"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
 }
 
 resource "snowflake_table" "purchase_orders" {
@@ -313,14 +397,46 @@ resource "snowflake_table" "purchase_orders" {
 
   lifecycle { prevent_destroy = true }
 
-  column { name = "PO_ID"                  type = "VARCHAR(16777216)" nullable = false }
-  column { name = "SUPPLIER_ID"            type = "VARCHAR(16777216)" nullable = true }
-  column { name = "LOCATION_ID"            type = "VARCHAR(16777216)" nullable = true }
-  column { name = "STATUS"                 type = "VARCHAR(16777216)" nullable = true }
-  column { name = "CREATED_AT"             type = "TIMESTAMP_NTZ(9)"  nullable = true }
-  column { name = "EXPECTED_DELIVERY_DATE" type = "DATE"              nullable = true }
-  column { name = "ACTUAL_DELIVERY_DATE"   type = "DATE"              nullable = true }
-  column { name = "TOTAL_VALUE"            type = "FLOAT"             nullable = true }
+  column {
+    name     = "PO_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "SUPPLIER_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "LOCATION_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "STATUS"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "CREATED_AT"
+    type     = "TIMESTAMP_NTZ(9)"
+    nullable = true
+  }
+  column {
+    name     = "EXPECTED_DELIVERY_DATE"
+    type     = "DATE"
+    nullable = true
+  }
+  column {
+    name     = "ACTUAL_DELIVERY_DATE"
+    type     = "DATE"
+    nullable = true
+  }
+  column {
+    name     = "TOTAL_VALUE"
+    type     = "FLOAT"
+    nullable = true
+  }
   column {
     name     = "_LOADED_AT"
     type     = "TIMESTAMP_LTZ(9)"
@@ -337,13 +453,41 @@ resource "snowflake_table" "purchase_order_lines" {
 
   lifecycle { prevent_destroy = true }
 
-  column { name = "PO_LINE_ID"   type = "VARCHAR(16777216)" nullable = false }
-  column { name = "PO_ID"        type = "VARCHAR(16777216)" nullable = true }
-  column { name = "PRODUCT_ID"   type = "VARCHAR(16777216)" nullable = true }
-  column { name = "QTY_ORDERED"  type = "NUMBER(38,0)"      nullable = true }
-  column { name = "QTY_RECEIVED" type = "NUMBER(38,0)"      nullable = true }
-  column { name = "UNIT_COST"    type = "FLOAT"             nullable = true }
-  column { name = "LINE_TOTAL"   type = "FLOAT"             nullable = true }
+  column {
+    name     = "PO_LINE_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "PO_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "PRODUCT_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "QTY_ORDERED"
+    type     = "NUMBER(38,0)"
+    nullable = true
+  }
+  column {
+    name     = "QTY_RECEIVED"
+    type     = "NUMBER(38,0)"
+    nullable = true
+  }
+  column {
+    name     = "UNIT_COST"
+    type     = "FLOAT"
+    nullable = true
+  }
+  column {
+    name     = "LINE_TOTAL"
+    type     = "FLOAT"
+    nullable = true
+  }
   column {
     name     = "_LOADED_AT"
     type     = "TIMESTAMP_LTZ(9)"
@@ -360,14 +504,46 @@ resource "snowflake_table" "inventory_events" {
 
   lifecycle { prevent_destroy = true }
 
-  column { name = "EVENT_ID"     type = "VARCHAR(16777216)" nullable = false }
-  column { name = "EVENT_TYPE"   type = "VARCHAR(16777216)" nullable = true }
-  column { name = "PRODUCT_ID"   type = "VARCHAR(16777216)" nullable = true }
-  column { name = "LOCATION_ID"  type = "VARCHAR(16777216)" nullable = true }
-  column { name = "QTY_DELTA"    type = "NUMBER(38,0)"      nullable = true }
-  column { name = "QTY_AFTER"    type = "NUMBER(38,0)"      nullable = true }
-  column { name = "REFERENCE_ID" type = "VARCHAR(16777216)" nullable = true }
-  column { name = "OCCURRED_AT"  type = "TIMESTAMP_NTZ(9)"  nullable = true }
+  column {
+    name     = "EVENT_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "EVENT_TYPE"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "PRODUCT_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "LOCATION_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "QTY_DELTA"
+    type     = "NUMBER(38,0)"
+    nullable = true
+  }
+  column {
+    name     = "QTY_AFTER"
+    type     = "NUMBER(38,0)"
+    nullable = true
+  }
+  column {
+    name     = "REFERENCE_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "OCCURRED_AT"
+    type     = "TIMESTAMP_NTZ(9)"
+    nullable = true
+  }
   column {
     name     = "_LOADED_AT"
     type     = "TIMESTAMP_LTZ(9)"
