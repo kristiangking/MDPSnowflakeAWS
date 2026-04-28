@@ -851,24 +851,21 @@ resource "snowflake_grant_privileges_to_account_role" "streamlit_usage_reporter"
 }
 
 # ── ANALYTICS.MARTS grants for REPORTER ───────────────────────
-# These grants require dbt to have run at least once (dbt creates the MARTS schema).
-# Uncomment and apply AFTER running the dbt DAG in Airflow for the first time.
-#
-# resource "snowflake_grant_privileges_to_account_role" "analytics_marts_schema_reporter" {
-#   account_role_name = snowflake_account_role.reporter.name
-#   privileges        = ["USAGE"]
-#   on_schema {
-#     schema_name = "${snowflake_database.analytics.name}.MARTS"
-#   }
-# }
-#
-# resource "snowflake_grant_privileges_to_account_role" "analytics_marts_tables_reporter" {
-#   account_role_name = snowflake_account_role.reporter.name
-#   privileges        = ["SELECT"]
-#   on_schema_object {
-#     all {
-#       object_type_plural = "TABLES"
-#       in_schema          = "${snowflake_database.analytics.name}.MARTS"
-#     }
-#   }
-# }
+resource "snowflake_grant_privileges_to_account_role" "analytics_marts_schema_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges        = ["USAGE"]
+  on_schema {
+    schema_name = "${snowflake_database.analytics.name}.MARTS"
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "analytics_marts_tables_reporter" {
+  account_role_name = snowflake_account_role.reporter.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    all {
+      object_type_plural = "TABLES"
+      in_schema          = "${snowflake_database.analytics.name}.MARTS"
+    }
+  }
+}
