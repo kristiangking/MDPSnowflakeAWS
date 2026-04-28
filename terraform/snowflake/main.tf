@@ -233,7 +233,17 @@ resource "snowflake_grant_privileges_to_account_role" "inventory_schema_transfor
   }
 }
 
-# ── File Format ────────────────────────────────────────────────
+# ── File Formats ───────────────────────────────────────────────
+resource "snowflake_file_format" "csv_header" {
+  name              = "CSV_HEADER_FORMAT"
+  database          = snowflake_database.raw.name
+  schema            = snowflake_schema.inventory.name
+  format_type       = "CSV"
+  skip_header       = 1
+  field_optionally_enclosed_by = "\""
+  comment           = "CSV with header row skipped — used by reference and transaction pipes"
+}
+
 resource "snowflake_file_format" "json_array" {
   name              = "JSON_ARRAY_FORMAT"
   database          = snowflake_database.raw.name
@@ -582,7 +592,7 @@ resource "snowflake_pipe" "products" {
   auto_ingest = true
   comment     = "Snowpipe — loads products CSV files from S3 reference/products/"
 
-  depends_on = [snowflake_table.products, snowflake_stage.s3_raw]
+  depends_on = [snowflake_table.products, snowflake_stage.s3_raw, snowflake_file_format.csv_header]
 
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.products (
@@ -590,6 +600,7 @@ resource "snowflake_pipe" "products" {
         unit_cost, rrp, reorder_point, reorder_qty, weight_kg
       )
       FROM @RAW.inventory.s3_raw_stage/reference/products/
+      FILE_FORMAT = (FORMAT_NAME = 'RAW.inventory.csv_header_format')
   SQL
 }
 
@@ -600,13 +611,14 @@ resource "snowflake_pipe" "locations" {
   auto_ingest = true
   comment     = "Snowpipe — loads locations CSV files from S3 reference/locations/"
 
-  depends_on = [snowflake_table.locations, snowflake_stage.s3_raw]
+  depends_on = [snowflake_table.locations, snowflake_stage.s3_raw, snowflake_file_format.csv_header]
 
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.locations (
         location_id, name, type, city, state
       )
       FROM @RAW.inventory.s3_raw_stage/reference/locations/
+      FILE_FORMAT = (FORMAT_NAME = 'RAW.inventory.csv_header_format')
   SQL
 }
 
@@ -617,13 +629,14 @@ resource "snowflake_pipe" "suppliers" {
   auto_ingest = true
   comment     = "Snowpipe — loads suppliers CSV files from S3 reference/suppliers/"
 
-  depends_on = [snowflake_table.suppliers, snowflake_stage.s3_raw]
+  depends_on = [snowflake_table.suppliers, snowflake_stage.s3_raw, snowflake_file_format.csv_header]
 
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.suppliers (
         supplier_id, name, lead_time_days, contact_email, payment_terms
       )
       FROM @RAW.inventory.s3_raw_stage/reference/suppliers/
+      FILE_FORMAT = (FORMAT_NAME = 'RAW.inventory.csv_header_format')
   SQL
 }
 
@@ -634,7 +647,7 @@ resource "snowflake_pipe" "purchase_orders" {
   auto_ingest = true
   comment     = "Snowpipe — loads purchase orders CSV files from S3 transactions/purchase_orders/"
 
-  depends_on = [snowflake_table.purchase_orders, snowflake_stage.s3_raw]
+  depends_on = [snowflake_table.purchase_orders, snowflake_stage.s3_raw, snowflake_file_format.csv_header]
 
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.purchase_orders (
@@ -642,6 +655,7 @@ resource "snowflake_pipe" "purchase_orders" {
         created_at, expected_delivery_date, actual_delivery_date, total_value
       )
       FROM @RAW.inventory.s3_raw_stage/transactions/purchase_orders/
+      FILE_FORMAT = (FORMAT_NAME = 'RAW.inventory.csv_header_format')
   SQL
 }
 
@@ -652,7 +666,7 @@ resource "snowflake_pipe" "purchase_order_lines" {
   auto_ingest = true
   comment     = "Snowpipe — loads purchase order lines CSV files from S3 transactions/purchase_order_lines/"
 
-  depends_on = [snowflake_table.purchase_order_lines, snowflake_stage.s3_raw]
+  depends_on = [snowflake_table.purchase_order_lines, snowflake_stage.s3_raw, snowflake_file_format.csv_header]
 
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.purchase_order_lines (
@@ -660,6 +674,7 @@ resource "snowflake_pipe" "purchase_order_lines" {
         qty_ordered, qty_received, unit_cost, line_total
       )
       FROM @RAW.inventory.s3_raw_stage/transactions/purchase_order_lines/
+      FILE_FORMAT = (FORMAT_NAME = 'RAW.inventory.csv_header_format')
   SQL
 }
 
