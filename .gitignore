@@ -11,6 +11,15 @@ dbt/whitegoods_inventory/venv/
 *.tfvars
 .terraform.lock.hcl
 
+# Lambda build artifacts
+lambda/**/.venv/
+lambda/**/__pycache__/
+**/*.zip
+
+# IDE
+.vscode/
+.idea/
+
 # General
 .env
 .DS_Store

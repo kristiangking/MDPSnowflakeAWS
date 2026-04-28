@@ -51,8 +51,8 @@ variable "snowpipe_sqs_arn" {
 }
 
 variable "snowflake_iam_user_arn" {
-  description = "Snowflake IAM user ARN from storage integration (from Snowflake terraform output). Use placeholder on Phase 1 apply."
-  default     = "arn:aws:iam::000000000000:user/placeholder"
+  description = "Snowflake IAM user ARN from storage integration (from Snowflake terraform output). Leave as placeholder on Phase 1 apply."
+  default     = "placeholder"
 }
 
 variable "snowflake_external_id" {
