@@ -572,12 +572,24 @@ resource "snowflake_table" "inventory_events" {
   }
 }
 
-# Grant SELECT on all RAW.INVENTORY tables to TRANSFORMER
+# Grant SELECT on all existing RAW.INVENTORY tables to TRANSFORMER
 resource "snowflake_grant_privileges_to_account_role" "raw_tables_transformer" {
   account_role_name = snowflake_account_role.transformer.name
   privileges        = ["SELECT"]
   on_schema_object {
     all {
+      object_type_plural = "TABLES"
+      in_schema          = "${snowflake_database.raw.name}.${snowflake_schema.inventory.name}"
+    }
+  }
+}
+
+# Grant SELECT on future RAW.INVENTORY tables to TRANSFORMER (covers tables created after the initial grant)
+resource "snowflake_grant_privileges_to_account_role" "raw_future_tables_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    future {
       object_type_plural = "TABLES"
       in_schema          = "${snowflake_database.raw.name}.${snowflake_schema.inventory.name}"
     }
