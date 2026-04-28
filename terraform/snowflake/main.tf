@@ -432,6 +432,11 @@ resource "snowflake_table" "locations" {
     type     = "VARCHAR(16777216)"
     nullable = true
   }
+  column {
+    name     = "_LOADED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
+    nullable = true
+  }
 }
 
 resource "snowflake_table" "suppliers" {
@@ -465,6 +470,11 @@ resource "snowflake_table" "suppliers" {
   column {
     name     = "PAYMENT_TERMS"
     type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "_LOADED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
     nullable = true
   }
 }
