@@ -1,8 +1,7 @@
 data "aws_caller_identity" "current" {}
 
 locals {
-  # Matches the manually-created bucket name convention: project-acct-region-an
-  bucket_name = "mdp-raw-landing-kk-${data.aws_caller_identity.current.account_id}-${var.aws_region}-an"
+  bucket_name = "mdp-raw-landing-kk-${data.aws_caller_identity.current.account_id}-${var.aws_region}"
 }
 
 # ── Raw landing bucket ─────────────────────────────────────────
