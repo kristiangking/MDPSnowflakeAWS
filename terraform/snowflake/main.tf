@@ -860,6 +860,8 @@ resource "snowflake_grant_privileges_to_account_role" "streamlit_usage_reporter"
 }
 
 # ── ANALYTICS.MARTS grants for REPORTER ───────────────────────
+# Uncomment AFTER running the dbt DAG at least once.
+# The MARTS schema is created by dbt, not Terraform — these grants will fail if it doesn't exist yet.
 resource "snowflake_grant_privileges_to_account_role" "analytics_marts_schema_reporter" {
   account_role_name = snowflake_account_role.reporter.name
   privileges        = ["USAGE"]

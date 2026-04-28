@@ -188,11 +188,15 @@ Creates databases, warehouses, roles, storage integration, schema, tables, and S
 
 ```bash
 cd terraform/snowflake
+
+# Always clear stale state before applying on a fresh Snowflake account
+rm -f terraform.tfstate terraform.tfstate.backup
+
 terraform init
 terraform apply -var-file="terraform.tfvars"
 ```
 
-> **If the apply fails partway through** (e.g. some resources already exist from a previous attempt), delete the state file and re-apply: `rm -f terraform.tfstate terraform.tfstate.backup && terraform apply -var-file="terraform.tfvars"`. If specific resources already exist in Snowflake but not in state, import them (see import commands below) rather than deleting and recreating.
+> **If the apply fails partway through** with "already exists" errors, clear state and re-apply: `rm -f terraform.tfstate terraform.tfstate.backup && terraform apply -var-file="terraform.tfvars"`. If specific resources need to be preserved, import them instead (see import commands below).
 
 **Capture these outputs** — needed for Phase 3:
 
