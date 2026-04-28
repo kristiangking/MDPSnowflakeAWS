@@ -136,20 +136,80 @@ resource "snowflake_grant_privileges_to_account_role" "raw_usage_transformer" {
 # ── TRANSFORM database grants ──────────────────────────────────
 resource "snowflake_grant_privileges_to_account_role" "transform_usage_transformer" {
   account_role_name = snowflake_account_role.transformer.name
-  privileges = ["USAGE"]
+  privileges        = ["USAGE", "CREATE SCHEMA"]
   on_account_object {
     object_type = "DATABASE"
     object_name = snowflake_database.transform.name
   }
 }
 
+resource "snowflake_grant_privileges_to_account_role" "transform_future_schemas_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["USAGE", "CREATE TABLE", "CREATE VIEW"]
+  on_schema {
+    future_schemas_in_database = snowflake_database.transform.name
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "transform_future_tables_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE"]
+  on_schema_object {
+    future {
+      object_type_plural = "TABLES"
+      in_database        = snowflake_database.transform.name
+    }
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "transform_future_views_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    future {
+      object_type_plural = "VIEWS"
+      in_database        = snowflake_database.transform.name
+    }
+  }
+}
+
 # ── ANALYTICS database grants ──────────────────────────────────
 resource "snowflake_grant_privileges_to_account_role" "analytics_usage_transformer" {
   account_role_name = snowflake_account_role.transformer.name
-  privileges = ["USAGE"]
+  privileges        = ["USAGE", "CREATE SCHEMA"]
   on_account_object {
     object_type = "DATABASE"
     object_name = snowflake_database.analytics.name
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "analytics_future_schemas_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["USAGE", "CREATE TABLE", "CREATE VIEW"]
+  on_schema {
+    future_schemas_in_database = snowflake_database.analytics.name
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "analytics_future_tables_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE"]
+  on_schema_object {
+    future {
+      object_type_plural = "TABLES"
+      in_database        = snowflake_database.analytics.name
+    }
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "analytics_future_views_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    future {
+      object_type_plural = "VIEWS"
+      in_database        = snowflake_database.analytics.name
+    }
   }
 }
 
