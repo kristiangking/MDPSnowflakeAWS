@@ -43,8 +43,8 @@ whitegoods_inventory:
       schema: staging
       threads: 4
 PROFILES
-chown -R ec2-user:ec2-user /home/ec2-user/.dbt
-chmod 600 /home/ec2-user/.dbt/profiles.yml
+chown -R 50000:0 /home/ec2-user/.dbt
+chmod 644 /home/ec2-user/.dbt/profiles.yml
 
 # Fix dbt writable directory permissions for UID 50000 (Airflow container user)
 mkdir -p /home/ec2-user/MDPSnowflakeAWS/dbt/whitegoods_inventory/{target,logs,dbt_packages}
