@@ -8,6 +8,7 @@ dbt/whitegoods_inventory/venv/
 **/.terraform/
 *.tfstate
 *.tfstate.backup
+*.tfstate.*.backup
 *.tfvars
 .terraform.lock.hcl
 

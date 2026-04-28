@@ -56,6 +56,7 @@ There is a deliberate circular dependency between them (explained below). A thre
 |---|---|---|
 | Terraform | >= 1.5 | https://developer.hashicorp.com/terraform/install |
 | AWS CLI | >= 2.x | https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html |
+| Snowflake CLI | >= 2.x | `pip install snowflake-cli` |
 | Git | any | https://git-scm.com |
 | SSH client | any | Built-in on macOS/Linux |
 
@@ -68,7 +69,7 @@ There is a deliberate circular dependency between them (explained below). A thre
 ### Snowflake requirements
 
 - A Snowflake account (trial or paid)
-- A user named `TF_SERVICE_USER` with `SYSADMIN` role granted
+- A user named `TF_SERVICE_USER` with **`ACCOUNTADMIN`** role granted (required to create roles and storage integrations — `SYSADMIN` alone is insufficient)
 - Credentials for `TF_SERVICE_USER` stored in `terraform/snowflake/terraform.tfvars`
 
 ---
@@ -81,7 +82,18 @@ There is a deliberate circular dependency between them (explained below). A thre
 │   └── dags/               # Airflow DAG definitions
 ├── dbt/
 │   └── whitegoods_inventory/  # dbt project (models, tests, sources)
-├── sample_data/            # Seed CSVs and JSON for local testing
+├── lambda/
+│   └── sqs_inventory_consumer/
+│       └── lambda_function.py  # Lambda source code
+├── sample_data/
+│   ├── s3_batch/           # CSV files for S3 → Snowpipe ingestion
+│   │   ├── reference/      # products.csv, locations.csv, suppliers.csv
+│   │   └── transactions/   # purchase_orders.csv, purchase_order_lines.csv
+│   └── sqs_events/         # JSON event files for SQS ingestion
+├── streamlit/
+│   └── whitegoods_inventory/
+│       ├── streamlit_app.py    # Streamlit dashboard app
+│       └── environment.yml     # Conda environment for Streamlit in Snowflake
 └── terraform/
     ├── aws/                # AWS root module
     │   ├── main.tf
@@ -89,18 +101,11 @@ There is a deliberate circular dependency between them (explained below). A thre
     │   ├── outputs.tf
     │   └── modules/
     │       ├── airflow_ec2/    # EC2 instance running Airflow in Docker
-    │       ├── iam/            # IAM roles (MWAA execution, Snowflake S3 access)
+    │       ├── iam/            # IAM roles (Snowflake S3 access, MWAA execution)
     │       ├── networking/     # VPC, subnets, security groups
     │       ├── s3/             # MWAA/Airflow S3 bucket
     │       ├── s3_raw/         # Raw landing bucket + Snowpipe event notifications
     │       └── sqs_lambda/     # Inventory events SQS queue, DLQ, Lambda consumer
-├── lambda/
-│   └── sqs_inventory_consumer/
-│       └── lambda_function.py  # Lambda source code
-├── streamlit/
-│   └── whitegoods_inventory/
-│       ├── streamlit_app.py    # Streamlit dashboard app
-│       └── environment.yml     # Conda environment for Streamlit in Snowflake
     └── snowflake/          # Snowflake root module
         ├── main.tf
         ├── variables.tf
@@ -131,7 +136,7 @@ snowflake_password    = "your-tf-service-user-password"
 dbt_service_password  = "your-dbt-service-user-password"
 
 # Populated after Phase 1 (AWS apply):
-# snowflake_iam_role_arn = "arn:aws:iam::277385995606:role/mdp-snowflake-dev-snowflake-s3-role"
+# snowflake_iam_role_arn = "arn:aws:iam::<account_id>:role/mdp-snowflake-dev-snowflake-s3-role"
 ```
 
 ---
@@ -148,7 +153,7 @@ Two resources depend on each other across cloud boundaries:
 - S3 event notifications need the Snowflake-managed SQS ARN to route events
 - That SQS ARN only exists after the Snowpipes are created
 
-**Resolution:** three-phase apply. Phase 1 creates AWS resources with placeholder trust policy values. Phase 2 creates Snowflake resources (outputs the real values). Phase 3 updates AWS with the real values.
+**Resolution:** three-phase apply. Phase 1 creates AWS resources with a placeholder trust policy. Phase 2 creates Snowflake resources and outputs the real values. Phase 3 updates AWS with the real values.
 
 ---
 
@@ -156,7 +161,7 @@ Two resources depend on each other across cloud boundaries:
 
 ### Phase 1 — AWS first pass
 
-Creates the VPC, EC2 instance (Airflow), S3 buckets, and the Snowflake IAM role with a placeholder trust policy.
+Creates the VPC, EC2 instance (Airflow), S3 buckets, SQS queues, Lambda, and the Snowflake IAM role with a placeholder trust policy.
 
 ```bash
 cd terraform/aws
@@ -164,7 +169,7 @@ terraform init
 terraform apply -var-file="terraform.tfvars"
 ```
 
-**Capture these outputs** — you will need them for Phase 2:
+**Capture this output** — needed for Phase 2:
 
 ```bash
 terraform output snowflake_s3_role_arn
@@ -175,53 +180,11 @@ Update `terraform/snowflake/terraform.tfvars`:
 snowflake_iam_role_arn = "<value from above>"
 ```
 
-**Import existing resources** (first time only — skip if building fresh):
-
-```bash
-cd terraform/aws
-
-# Raw landing bucket
-terraform import module.s3_raw.aws_s3_bucket.raw \
-  mdp-raw-landing-kk-277385995606-ap-southeast-2-an
-
-# Versioning, encryption, public access block
-terraform import module.s3_raw.aws_s3_bucket_versioning.raw \
-  mdp-raw-landing-kk-277385995606-ap-southeast-2-an
-terraform import module.s3_raw.aws_s3_bucket_server_side_encryption_configuration.raw \
-  mdp-raw-landing-kk-277385995606-ap-southeast-2-an
-terraform import module.s3_raw.aws_s3_bucket_public_access_block.raw \
-  mdp-raw-landing-kk-277385995606-ap-southeast-2-an
-
-# Snowflake IAM role (find the existing name in the AWS console)
-terraform import module.iam.aws_iam_role.snowflake_s3 \
-  <existing-snowflake-iam-role-name>
-
-# SQS queues
-terraform import module.sqs_lambda.aws_sqs_queue.dlq \
-  https://sqs.ap-southeast-2.amazonaws.com/277385995606/inventory-events-dlq
-terraform import module.sqs_lambda.aws_sqs_queue.main \
-  https://sqs.ap-southeast-2.amazonaws.com/277385995606/inventory-events-queue
-
-# Lambda function
-terraform import module.sqs_lambda.aws_lambda_function.consumer \
-  sqs-inventory-events-consumer
-
-# Lambda event source mapping (UUID from: aws lambda list-event-source-mappings --function-name sqs-inventory-events-consumer)
-terraform import module.sqs_lambda.aws_lambda_event_source_mapping.sqs \
-  9ea0c746-fd25-45a0-bfd6-2aeac0568fa6
-
-# Lambda IAM role — the existing auto-generated role; Terraform will rename it on next apply
-terraform import module.sqs_lambda.aws_iam_role.lambda_exec \
-  sqs-inventory-events-consumer-role-p11ie553
-```
-
-> **Note on the Lambda IAM role:** The existing role has an auto-generated name (`sqs-inventory-events-consumer-role-p11ie553`). Terraform will want to replace it with `mdp-snowflake-dev-sqs-inventory-consumer-role`. This is safe — the Lambda function will be updated to reference the new role, and the old role can be deleted from the AWS console once the apply succeeds.
-
 ---
 
 ### Phase 2 — Snowflake apply
 
-Creates databases, warehouses, roles, the storage integration (pointing at the Phase 1 IAM role), schema, tables, and Snowpipes.
+Creates databases, warehouses, roles, storage integration, schema, tables, and Snowpipes.
 
 ```bash
 cd terraform/snowflake
@@ -229,114 +192,149 @@ terraform init
 terraform apply -var-file="terraform.tfvars"
 ```
 
-**Capture these outputs** — you will need them for Phase 3:
+> **If the apply fails partway through** (e.g. some resources already exist from a previous attempt), delete the state file and re-apply: `rm -f terraform.tfstate terraform.tfstate.backup && terraform apply -var-file="terraform.tfvars"`. If specific resources already exist in Snowflake but not in state, import them (see import commands below) rather than deleting and recreating.
+
+**Capture these outputs** — needed for Phase 3:
 
 ```bash
-terraform output snowflake_s3_role_arn      # confirm it matches Phase 1
 terraform output snowflake_iam_user_arn
 terraform output snowflake_external_id
 terraform output snowpipe_sqs_arn
 ```
 
-Update `terraform/aws/terraform.tfvars` with the three values:
+Alternatively, run `DESC INTEGRATION S3_RAW_INTEGRATION;` in a Snowflake worksheet to retrieve `STORAGE_AWS_IAM_USER_ARN` and `STORAGE_AWS_EXTERNAL_ID`.
+
+Update `terraform/aws/terraform.tfvars`:
 ```hcl
 snowflake_iam_user_arn = "<snowflake_iam_user_arn output>"
 snowflake_external_id  = "<snowflake_external_id output>"
 snowpipe_sqs_arn       = "<snowpipe_sqs_arn output>"
 ```
 
-**Import existing Snowflake resources** (first time only — skip if building fresh):
-
-```bash
-cd terraform/snowflake
-
-# Storage integration
-terraform import snowflake_storage_integration.s3_raw S3_RAW_INTEGRATION
-
-# Schema
-terraform import snowflake_schema.inventory RAW|INVENTORY
-
-# File format
-terraform import snowflake_file_format.json_array RAW|INVENTORY|JSON_ARRAY_FORMAT
-
-# Stage
-terraform import snowflake_stage.s3_raw RAW|INVENTORY|S3_RAW_STAGE
-
-# Tables
-terraform import snowflake_table.products            RAW|INVENTORY|PRODUCTS
-terraform import snowflake_table.locations           RAW|INVENTORY|LOCATIONS
-terraform import snowflake_table.suppliers           RAW|INVENTORY|SUPPLIERS
-terraform import snowflake_table.purchase_orders     RAW|INVENTORY|PURCHASE_ORDERS
-terraform import snowflake_table.purchase_order_lines RAW|INVENTORY|PURCHASE_ORDER_LINES
-terraform import snowflake_table.inventory_events    RAW|INVENTORY|INVENTORY_EVENTS
-
-# Pipes
-terraform import snowflake_pipe.products             RAW|INVENTORY|PIPE_PRODUCTS
-terraform import snowflake_pipe.locations            RAW|INVENTORY|PIPE_LOCATIONS
-terraform import snowflake_pipe.suppliers            RAW|INVENTORY|PIPE_SUPPLIERS
-terraform import snowflake_pipe.purchase_orders      RAW|INVENTORY|PIPE_PURCHASE_ORDERS
-terraform import snowflake_pipe.purchase_order_lines RAW|INVENTORY|PIPE_PURCHASE_ORDER_LINES
-terraform import snowflake_pipe.inventory_events     RAW|INVENTORY|PIPE_INVENTORY_EVENTS
-```
-
-# Streamlit resources (STREAMLIT_APPS database was created manually)
-terraform import snowflake_database.streamlit_apps STREAMLIT_APPS
-terraform import snowflake_schema.streamlit_inventory STREAMLIT_APPS|INVENTORY
-
-# The existing Streamlit has an auto-generated name — a new properly-named one
-# will be created by Terraform. Drop the old one manually from the Snowflake UI:
-#   STREAMLIT_APPS.INVENTORY.N1EYWG3VS6AOZJY9
-# Also drop TRANSFORM_OLD database if no longer needed:
-#   DROP DATABASE TRANSFORM_OLD;
-```
-
-After applying, upload the Streamlit app files to the named stage (requires SnowSQL):
-
-```bash
-# Install SnowSQL if not already present: https://docs.snowflake.com/en/user-guide/snowsql-install-config
-snowsql -a ZKWOWXY-BB01746 -u tf_service_user -r SYSADMIN \
-  -q "PUT file://streamlit/whitegoods_inventory/streamlit_app.py @STREAMLIT_APPS.INVENTORY.STREAMLIT_STAGE OVERWRITE=TRUE AUTO_COMPRESS=FALSE"
-
-snowsql -a ZKWOWXY-BB01746 -u tf_service_user -r SYSADMIN \
-  -q "PUT file://streamlit/whitegoods_inventory/environment.yml @STREAMLIT_APPS.INVENTORY.STREAMLIT_STAGE OVERWRITE=TRUE AUTO_COMPRESS=FALSE"
-```
-
-Once uploaded, the dashboard is accessible at:
-`https://app.snowflake.com/<org>/<account>/streamlit-apps/STREAMLIT_APPS.INVENTORY.WHITEGOODS_INVENTORY_DASHBOARD`
-
-> **Note on query warehouse:** The existing app used `TRANSFORM_WH`. Terraform sets it to `REPORT_WH` (the designated reporting warehouse). If you prefer to keep `TRANSFORM_WH`, update `query_warehouse = snowflake_warehouse.report.name` to `snowflake_warehouse.transform.name` in `main.tf`.
-
-> **Note on ANALYTICS.MARTS grants:** The `analytics_marts_schema_reporter` and `analytics_marts_tables_reporter` grants will fail if dbt has not yet run (the MARTS schema is created by dbt, not Terraform). Run `dbt run` at least once before applying these grants, or apply them in a separate pass after dbt has executed.
-
-> **Before applying after import:** Run `terraform plan` and review it carefully. Pay special attention to any table column changes — the declared column types in `main.tf` are best-effort estimates based on COPY INTO definitions. If the plan shows unexpected column modifications, run `SELECT GET_DDL('TABLE', 'RAW.INVENTORY.<TABLE_NAME>');` in a Snowflake worksheet to get the exact DDL and reconcile the types before applying. The tables have `lifecycle { prevent_destroy = true }` as a safety net.
+> **Note on ANALYTICS.MARTS grants:** The grants for the REPORTER role on `ANALYTICS.MARTS` are commented out in `main.tf`. Uncomment and re-apply them **after** running the dbt DAG at least once — the MARTS schema is created by dbt, not Terraform, and the grants will fail if it doesn't exist yet.
 
 ---
 
 ### Phase 3 — AWS second pass
 
-Updates the Snowflake IAM role trust policy with the real Snowflake principal, and creates the five S3 event notifications that trigger Snowpipe on file arrival.
+Updates the Snowflake IAM role trust policy with the real Snowflake principal, and creates the six S3 event notifications that trigger Snowpipe on file arrival.
 
 ```bash
 cd terraform/aws
 terraform apply -var-file="terraform.tfvars"
 ```
 
-**Import the existing S3 event notification config** (first time only):
+After this apply, the full ingestion pipeline is live:
+- Events sent to SQS → Lambda batches → S3 `events/inventory/` → Snowpipe → `RAW.INVENTORY.INVENTORY_EVENTS`
+- CSV files uploaded to S3 `reference/` or `transactions/` → Snowpipe → respective RAW tables
+
+---
+
+## Uploading sample data
 
 ```bash
-terraform import 'module.s3_raw.aws_s3_bucket_notification.snowpipe[0]' \
-  mdp-raw-landing-kk-277385995606-ap-southeast-2-an
+cd /path/to/MDPSnowflakeAWS
+
+# Reference and transaction data (triggers Snowpipe via S3 event notifications)
+aws s3 cp sample_data/s3_batch/reference/products.csv \
+  s3://mdp-raw-landing-kk-<account_id>-ap-southeast-2/reference/products/
+aws s3 cp sample_data/s3_batch/reference/locations.csv \
+  s3://mdp-raw-landing-kk-<account_id>-ap-southeast-2/reference/locations/
+aws s3 cp sample_data/s3_batch/reference/suppliers.csv \
+  s3://mdp-raw-landing-kk-<account_id>-ap-southeast-2/reference/suppliers/
+aws s3 cp sample_data/s3_batch/transactions/purchase_orders.csv \
+  s3://mdp-raw-landing-kk-<account_id>-ap-southeast-2/transactions/purchase_orders/
+aws s3 cp sample_data/s3_batch/transactions/purchase_order_lines.csv \
+  s3://mdp-raw-landing-kk-<account_id>-ap-southeast-2/transactions/purchase_order_lines/
+
+# Inventory events (sent via SQS → Lambda → S3 → Snowpipe)
+python3 - << 'EOF'
+import json, boto3, time
+sqs = boto3.client('sqs', region_name='ap-southeast-2')
+queue_url = '<inventory_events_queue_url output>'
+for month in ['jan', 'feb', 'mar']:
+    with open(f'sample_data/sqs_events/inventory_events_{month}.json') as f:
+        events = json.load(f)
+    for event in events:
+        sqs.send_message(QueueUrl=queue_url, MessageBody=json.dumps(event))
+    print(f'{month}: sent {len(events)} events')
+EOF
 ```
 
-After this apply, the full ingestion pipeline is live:
-- Events sent to SQS → Lambda batches → S3 `events/inventory/` → Snowpipe auto-ingest → `RAW.INVENTORY.INVENTORY_EVENTS`
-- CSV files dropped into S3 `reference/` or `transactions/` → Snowpipe auto-ingest → respective RAW tables
+After uploading, verify in Snowflake:
+```sql
+SELECT COUNT(*) FROM RAW.INVENTORY.PRODUCTS;           -- 12
+SELECT COUNT(*) FROM RAW.INVENTORY.LOCATIONS;          -- 7
+SELECT COUNT(*) FROM RAW.INVENTORY.SUPPLIERS;          -- 3
+SELECT COUNT(*) FROM RAW.INVENTORY.PURCHASE_ORDERS;    -- 39
+SELECT COUNT(*) FROM RAW.INVENTORY.PURCHASE_ORDER_LINES; -- 113
+SELECT COUNT(*) FROM RAW.INVENTORY.INVENTORY_EVENTS;   -- 636
+```
+
+If Snowpipe hasn't picked up files automatically, trigger a manual refresh:
+```sql
+ALTER PIPE RAW.INVENTORY.PIPE_PRODUCTS REFRESH;
+-- repeat for other pipes
+```
+
+---
+
+## Running dbt
+
+Trigger the `whitegoods_dbt_pipeline` DAG in Airflow (`http://<airflow_public_ip>:8080`).
+
+To run manually on the EC2 instance:
+
+```bash
+ssh ec2-user@<airflow_public_ip>
+docker exec airflow-scheduler-1 \
+  /home/airflow/.local/bin/dbt run \
+  --project-dir /opt/airflow/dbt/whitegoods_inventory \
+  --profiles-dir /home/airflow/.dbt
+```
+
+After dbt runs, verify mart data:
+```sql
+SELECT COUNT(*) FROM ANALYTICS.MARTS.MART_INVENTORY_SUMMARY;
+```
+
+Then uncomment the ANALYTICS.MARTS grants in `terraform/snowflake/main.tf` and re-apply.
+
+---
+
+## Uploading Streamlit files
+
+The Terraform resource creates the Streamlit app metadata, but the source files must be uploaded separately to the internal stage (this is a Snowflake limitation — stage file uploads are client-side operations outside Terraform's scope).
+
+```bash
+# Configure a Snowflake CLI connection (one-time setup)
+snow connection add \
+  --connection-name mdp \
+  --account ZKWOWXY-BB01746 \
+  --user tf_service_user \
+  --role SYSADMIN \
+  --database STREAMLIT_APPS \
+  --schema INVENTORY
+# Enter password when prompted; press Enter to skip optional fields
+
+# Upload files from repo root
+snow stage copy streamlit/whitegoods_inventory/streamlit_app.py \
+  @STREAMLIT_APPS.INVENTORY.STREAMLIT_STAGE \
+  --connection mdp \
+  --overwrite
+
+snow stage copy streamlit/whitegoods_inventory/environment.yml \
+  @STREAMLIT_APPS.INVENTORY.STREAMLIT_STAGE \
+  --connection mdp \
+  --overwrite
+```
+
+The dashboard is accessible at:
+`https://app.snowflake.com/<org>/<account>/streamlit-apps/STREAMLIT_APPS.INVENTORY.WHITEGOODS_INVENTORY_DASHBOARD`
 
 ---
 
 ## Airflow access
-
-Airflow starts automatically on EC2 boot (via Docker Compose). After Phase 1 completes:
 
 ```
 http://<airflow_public_ip>:8080
@@ -344,22 +342,75 @@ Username: admin
 Password: admin
 ```
 
-The `airflow_public_ip` is printed as a Terraform output after the Phase 1 apply. Note that EC2 public IPs change on instance stop/start — check the AWS console or re-run `terraform output` if the IP has changed.
+EC2 public IPs change on instance stop/start — check the AWS console or run `terraform output airflow_public_ip` if the IP has changed.
 
 ---
 
-## dbt
+## Import commands (fresh-build reference)
 
-dbt runs inside the Airflow container via the `whitegoods_dbt_dag` DAG. To run it manually on the EC2 instance:
+These are only needed if Terraform state is out of sync with existing Snowflake/AWS resources.
+
+### AWS
 
 ```bash
-ssh ec2-user@<airflow_public_ip>
+cd terraform/aws
 
-# Run dbt inside the scheduler container
-docker exec airflow-scheduler-1 \
-  /home/airflow/.local/bin/dbt run \
-  --project-dir /opt/airflow/dbt/whitegoods_inventory \
-  --profiles-dir /home/airflow/.dbt
+# Lambda event source mapping
+terraform import module.sqs_lambda.aws_lambda_event_source_mapping.sqs \
+  <UUID from: aws lambda list-event-source-mappings --function-name sqs-inventory-events-consumer>
+
+# S3 event notification (Phase 3 only)
+terraform import 'module.s3_raw.aws_s3_bucket_notification.snowpipe[0]' \
+  mdp-raw-landing-kk-<account_id>-ap-southeast-2
+```
+
+### Snowflake
+
+> **Important:** Snowflake provider v0.98 uses **dot-separated** identifiers for import IDs, not pipe-separated.
+
+```bash
+cd terraform/snowflake
+
+# Databases
+terraform import snowflake_database.raw RAW
+terraform import snowflake_database.transform TRANSFORM
+terraform import snowflake_database.analytics ANALYTICS
+terraform import snowflake_database.streamlit_apps STREAMLIT_APPS
+
+# Warehouses
+terraform import snowflake_warehouse.loading LOADING_WH
+terraform import snowflake_warehouse.transform TRANSFORM_WH
+terraform import snowflake_warehouse.report REPORT_WH
+
+# Storage integration
+terraform import snowflake_storage_integration.s3_raw S3_RAW_INTEGRATION
+
+# Schemas (dot-separated)
+terraform import snowflake_schema.inventory 'RAW.INVENTORY'
+terraform import snowflake_schema.streamlit_inventory 'STREAMLIT_APPS.INVENTORY'
+
+# File formats (dot-separated)
+terraform import snowflake_file_format.json_array 'RAW.INVENTORY.JSON_ARRAY_FORMAT'
+terraform import snowflake_file_format.csv_header 'RAW.INVENTORY.CSV_HEADER_FORMAT'
+
+# Stage (dot-separated)
+terraform import snowflake_stage.s3_raw 'RAW.INVENTORY.S3_RAW_STAGE'
+
+# Tables (dot-separated)
+terraform import snowflake_table.products            'RAW.INVENTORY.PRODUCTS'
+terraform import snowflake_table.locations           'RAW.INVENTORY.LOCATIONS'
+terraform import snowflake_table.suppliers           'RAW.INVENTORY.SUPPLIERS'
+terraform import snowflake_table.purchase_orders     'RAW.INVENTORY.PURCHASE_ORDERS'
+terraform import snowflake_table.purchase_order_lines 'RAW.INVENTORY.PURCHASE_ORDER_LINES'
+terraform import snowflake_table.inventory_events    'RAW.INVENTORY.INVENTORY_EVENTS'
+
+# Pipes (dot-separated)
+terraform import snowflake_pipe.products             'RAW.INVENTORY.PIPE_PRODUCTS'
+terraform import snowflake_pipe.locations            'RAW.INVENTORY.PIPE_LOCATIONS'
+terraform import snowflake_pipe.suppliers            'RAW.INVENTORY.PIPE_SUPPLIERS'
+terraform import snowflake_pipe.purchase_orders      'RAW.INVENTORY.PIPE_PURCHASE_ORDERS'
+terraform import snowflake_pipe.purchase_order_lines 'RAW.INVENTORY.PIPE_PURCHASE_ORDER_LINES'
+terraform import snowflake_pipe.inventory_events     'RAW.INVENTORY.PIPE_INVENTORY_EVENTS'
 ```
 
 ---
@@ -367,9 +418,11 @@ docker exec airflow-scheduler-1 \
 ## Notes
 
 - `terraform.tfvars` files are gitignored — never commit credentials
+- The Snowflake provider requires **ACCOUNTADMIN** to create roles and storage integrations
 - The raw landing S3 bucket has `force_destroy = false` to prevent accidental data loss
 - RAW database tables have `lifecycle { prevent_destroy = true }` as an additional safety net
 - All six Snowpipes share a single Snowflake-managed SQS queue — this is expected Snowpipe behaviour
-- Lambda timeout is set to 30s (the original auto-created function used 3s, which is too short for S3 PutObject under load)
-- The Lambda `RAW_BUCKET` environment variable is managed by Terraform; the original hardcoded value has been removed
-- To send a test event to SQS manually: `aws sqs send-message --queue-url <inventory_events_queue_url output> --message-body '{"event_id":"test-1","event_type":"ADJUSTMENT","product_id":"P001","location_id":"L001","qty_delta":-1,"qty_after":99,"reference_id":null,"occurred_at":"2026-04-27T00:00:00Z"}'`
+- Warehouse query acceleration is disabled via `lifecycle { ignore_changes = [enable_query_acceleration, query_acceleration_max_scale_factor] }` — required for trial accounts
+- The `profiles.yml` on EC2 is owned by UID 50000 (Airflow container user) with permissions 644 — do not change to 600 or the container will not be able to read it
+- Lambda timeout is 30s to accommodate S3 PutObject under load
+- To send a test SQS event: `aws sqs send-message --queue-url <inventory_events_queue_url> --message-body '{"event_id":"test-1","event_type":"ADJUSTMENT","product_id":"P001","location_id":"L001","qty_delta":-1,"qty_after":99,"reference_id":null,"occurred_at":"2026-04-28T00:00:00Z"}'`
