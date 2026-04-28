@@ -33,21 +33,27 @@ resource "snowflake_database" "analytics" {
 
 # ── Warehouses ─────────────────────────────────────────────────
 resource "snowflake_warehouse" "loading" {
-  name                      = "LOADING_WH"
-  warehouse_size            = "X-SMALL"
-  auto_suspend              = 60
-  auto_resume               = true
-  enable_query_acceleration = false
-  comment                   = "Used by Snowpipe and data loaders"
+  name           = "LOADING_WH"
+  warehouse_size = "X-SMALL"
+  auto_suspend   = 60
+  auto_resume    = true
+  comment        = "Used by Snowpipe and data loaders"
+
+  lifecycle {
+    ignore_changes = [enable_query_acceleration, query_acceleration_max_scale_factor]
+  }
 }
 
 resource "snowflake_warehouse" "transform" {
-  name                      = "TRANSFORM_WH"
-  warehouse_size            = "SMALL"
-  auto_suspend              = 120
-  auto_resume               = true
-  enable_query_acceleration = false
-  comment                   = "Used by dbt transformations"
+  name           = "TRANSFORM_WH"
+  warehouse_size = "SMALL"
+  auto_suspend   = 120
+  auto_resume    = true
+  comment        = "Used by dbt transformations"
+
+  lifecycle {
+    ignore_changes = [enable_query_acceleration, query_acceleration_max_scale_factor]
+  }
 }
 
 resource "snowflake_warehouse" "report" {
@@ -56,6 +62,10 @@ resource "snowflake_warehouse" "report" {
   auto_suspend   = 60
   auto_resume    = true
   comment        = "Used by dashboards and analysts"
+
+  lifecycle {
+    ignore_changes = [enable_query_acceleration, query_acceleration_max_scale_factor]
+  }
 }
 
 # ── Roles ──────────────────────────────────────────────────────
@@ -744,24 +754,24 @@ resource "snowflake_grant_privileges_to_account_role" "streamlit_usage_reporter"
 }
 
 # ── ANALYTICS.MARTS grants for REPORTER ───────────────────────
-# Allows the Streamlit dashboard to query mart models via the REPORTER role.
-# Note: ANALYTICS.MARTS schema is created by dbt — run dbt at least once
-# before applying these grants, or they will fail with "schema does not exist".
-resource "snowflake_grant_privileges_to_account_role" "analytics_marts_schema_reporter" {
-  account_role_name = snowflake_account_role.reporter.name
-  privileges        = ["USAGE"]
-  on_schema {
-    schema_name = "${snowflake_database.analytics.name}.MARTS"
-  }
-}
-
-resource "snowflake_grant_privileges_to_account_role" "analytics_marts_tables_reporter" {
-  account_role_name = snowflake_account_role.reporter.name
-  privileges        = ["SELECT"]
-  on_schema_object {
-    all {
-      object_type_plural = "TABLES"
-      in_schema          = "${snowflake_database.analytics.name}.MARTS"
-    }
-  }
-}
+# These grants require dbt to have run at least once (dbt creates the MARTS schema).
+# Uncomment and apply AFTER running the dbt DAG in Airflow for the first time.
+#
+# resource "snowflake_grant_privileges_to_account_role" "analytics_marts_schema_reporter" {
+#   account_role_name = snowflake_account_role.reporter.name
+#   privileges        = ["USAGE"]
+#   on_schema {
+#     schema_name = "${snowflake_database.analytics.name}.MARTS"
+#   }
+# }
+#
+# resource "snowflake_grant_privileges_to_account_role" "analytics_marts_tables_reporter" {
+#   account_role_name = snowflake_account_role.reporter.name
+#   privileges        = ["SELECT"]
+#   on_schema_object {
+#     all {
+#       object_type_plural = "TABLES"
+#       in_schema          = "${snowflake_database.analytics.name}.MARTS"
+#     }
+#   }
+# }
