@@ -12,7 +12,7 @@ provider "snowflake" {
   account_name      = split("-", var.snowflake_account)[1]
   user              = var.snowflake_user
   password          = var.snowflake_password
-  role              = "SYSADMIN"
+  role              = "ACCOUNTADMIN"
 }
 
 # ── Databases ──────────────────────────────────────────────────
@@ -572,6 +572,8 @@ resource "snowflake_pipe" "products" {
   auto_ingest = true
   comment     = "Snowpipe — loads products CSV files from S3 reference/products/"
 
+  depends_on = [snowflake_table.products, snowflake_stage.s3_raw]
+
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.products (
         product_id, sku, name, category, brand, supplier_id,
@@ -588,6 +590,8 @@ resource "snowflake_pipe" "locations" {
   auto_ingest = true
   comment     = "Snowpipe — loads locations CSV files from S3 reference/locations/"
 
+  depends_on = [snowflake_table.locations, snowflake_stage.s3_raw]
+
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.locations (
         location_id, name, type, city, state
@@ -603,6 +607,8 @@ resource "snowflake_pipe" "suppliers" {
   auto_ingest = true
   comment     = "Snowpipe — loads suppliers CSV files from S3 reference/suppliers/"
 
+  depends_on = [snowflake_table.suppliers, snowflake_stage.s3_raw]
+
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.suppliers (
         supplier_id, name, lead_time_days, contact_email, payment_terms
@@ -617,6 +623,8 @@ resource "snowflake_pipe" "purchase_orders" {
   name        = "PIPE_PURCHASE_ORDERS"
   auto_ingest = true
   comment     = "Snowpipe — loads purchase orders CSV files from S3 transactions/purchase_orders/"
+
+  depends_on = [snowflake_table.purchase_orders, snowflake_stage.s3_raw]
 
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.purchase_orders (
@@ -634,6 +642,8 @@ resource "snowflake_pipe" "purchase_order_lines" {
   auto_ingest = true
   comment     = "Snowpipe — loads purchase order lines CSV files from S3 transactions/purchase_order_lines/"
 
+  depends_on = [snowflake_table.purchase_order_lines, snowflake_stage.s3_raw]
+
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.purchase_order_lines (
         po_line_id, po_id, product_id,
@@ -649,6 +659,8 @@ resource "snowflake_pipe" "inventory_events" {
   name        = "PIPE_INVENTORY_EVENTS"
   auto_ingest = true
   comment     = "Snowpipe — loads inventory event JSON files from S3 events/inventory/"
+
+  depends_on = [snowflake_table.inventory_events, snowflake_stage.s3_raw]
 
   copy_statement = <<-SQL
     COPY INTO RAW.inventory.inventory_events (
