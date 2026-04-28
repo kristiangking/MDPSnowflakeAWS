@@ -643,6 +643,7 @@ resource "snowflake_table" "inventory_events" {
 }
 
 # Grant SELECT on all existing RAW.INVENTORY tables to TRANSFORMER
+# depends_on ensures all tables exist before this point-in-time grant runs
 resource "snowflake_grant_privileges_to_account_role" "raw_tables_transformer" {
   account_role_name = snowflake_account_role.transformer.name
   privileges        = ["SELECT"]
@@ -652,6 +653,14 @@ resource "snowflake_grant_privileges_to_account_role" "raw_tables_transformer" {
       in_schema          = "${snowflake_database.raw.name}.${snowflake_schema.inventory.name}"
     }
   }
+  depends_on = [
+    snowflake_table.products,
+    snowflake_table.locations,
+    snowflake_table.suppliers,
+    snowflake_table.purchase_orders,
+    snowflake_table.purchase_order_lines,
+    snowflake_table.inventory_events,
+  ]
 }
 
 # Grant SELECT on future RAW.INVENTORY tables to TRANSFORMER (covers tables created after the initial grant)
