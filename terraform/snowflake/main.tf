@@ -697,7 +697,7 @@ resource "snowflake_streamlit" "whitegoods_dashboard" {
   database        = snowflake_database.streamlit_apps.name
   schema          = snowflake_schema.streamlit_inventory.name
   name            = "WHITEGOODS_INVENTORY_DASHBOARD"
-  stage           = snowflake_stage.streamlit.name
+  stage           = "${snowflake_database.streamlit_apps.name}.${snowflake_schema.streamlit_inventory.name}.${snowflake_stage.streamlit.name}"
   main_file       = "streamlit_app.py"
   query_warehouse = snowflake_warehouse.report.name
   title           = "Whitegoods Inventory Dashboard"
