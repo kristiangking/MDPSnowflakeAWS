@@ -21,7 +21,7 @@ swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
 # ── Install DataHub CLI + ingestion connectors ─────────────────
-pip3 install \
+pip3 install --ignore-installed \
   'acryl-datahub' \
   'acryl-datahub[snowflake]' \
   'acryl-datahub[dbt-core]'
