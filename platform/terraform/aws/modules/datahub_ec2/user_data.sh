@@ -31,9 +31,9 @@ curl -fsSL \
 chown ec2-user:ec2-user /home/ec2-user/datahub/docker-compose.yml
 
 # ── Pre-pull ingestion image ───────────────────────────────────
-# acryl/datahub-ingestion has all connectors pre-installed —
+# acryldata/datahub-ingestion has all connectors pre-installed —
 # avoids pip dependency hell on the host entirely.
-docker pull acryl/datahub-ingestion:latest
+docker pull acryldata/datahub-ingestion:head || true
 
 # ── Pull DataHub images and start ──────────────────────────────
 cd /home/ec2-user/datahub
@@ -114,7 +114,7 @@ RECIPE
 chown -R ec2-user:ec2-user /home/ec2-user/datahub/recipes
 
 # ── Ingestion cron ─────────────────────────────────────────────
-# Runs ingestion via Docker — uses the pre-pulled acryl/datahub-ingestion
+# Runs ingestion via Docker — uses the pre-pulled acryldata/datahub-ingestion
 # image which has all connectors pre-installed. No host pip install needed.
 #
 # dbt:      syncs artifacts from S3 then ingests at 20:30 UTC
@@ -122,8 +122,8 @@ chown -R ec2-user:ec2-user /home/ec2-user/datahub/recipes
 # Snowflake: full metadata crawl every 6 hours
 # Airflow:   pipeline metadata every 6 hours
 cat > /etc/cron.d/datahub-ingestion << CRON
-30 20 * * * root aws s3 sync s3://${airflow_s3_bucket}/datahub/dbt/ /home/ec2-user/datahub/dbt-artifacts/ --region ap-southeast-2 && docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes -v /home/ec2-user/datahub/dbt-artifacts:/dbt-artifacts acryl/datahub-ingestion:latest datahub ingest -c /recipes/dbt.yml 2>/dev/null || true
-0 */6 * * * root docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes acryl/datahub-ingestion:latest datahub ingest -c /recipes/snowflake.yml 2>/dev/null || true
-0 */6 * * * root docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes acryl/datahub-ingestion:latest datahub ingest -c /recipes/airflow.yml 2>/dev/null || true
+30 20 * * * root aws s3 sync s3://${airflow_s3_bucket}/datahub/dbt/ /home/ec2-user/datahub/dbt-artifacts/ --region ap-southeast-2 && docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes -v /home/ec2-user/datahub/dbt-artifacts:/dbt-artifacts acryldata/datahub-ingestion:head datahub ingest -c /recipes/dbt.yml 2>/dev/null || true
+0 */6 * * * root docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes acryldata/datahub-ingestion:head datahub ingest -c /recipes/snowflake.yml 2>/dev/null || true
+0 */6 * * * root docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes acryldata/datahub-ingestion:head datahub ingest -c /recipes/airflow.yml 2>/dev/null || true
 CRON
 chmod 644 /etc/cron.d/datahub-ingestion
