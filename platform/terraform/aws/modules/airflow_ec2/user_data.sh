@@ -3,7 +3,8 @@ set -e
 
 # Update system
 yum update -y
-yum install -y git python3-pip python3-devel gcc
+yum install -y git python3-pip python3-devel gcc cronie
+systemctl enable --now crond
 
 # Install Docker
 yum install -y docker
