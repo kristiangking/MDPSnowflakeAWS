@@ -86,7 +86,7 @@ resource "aws_security_group" "datahub" {
   }
 
   ingress {
-    description = "DataHub GMS API (internal — Airflow plugin + ingestion CLI)"
+    description = "DataHub GMS API (internal - Airflow plugin + ingestion CLI)"
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
