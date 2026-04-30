@@ -3,7 +3,7 @@ set -e
 
 # Update system
 yum update -y
-yum install -y docker python3-pip python3-devel gcc cronie git
+yum install -y docker cronie
 systemctl enable --now docker
 systemctl enable --now crond
 usermod -aG docker ec2-user
@@ -20,32 +20,29 @@ mkswap /swapfile
 swapon /swapfile
 echo '/swapfile none swap sw 0 0' >> /etc/fstab
 
-# ── Install DataHub CLI + ingestion connectors ─────────────────
-pip3 install --ignore-installed \
-  'acryl-datahub' \
-  'acryl-datahub[snowflake]' \
-  'acryl-datahub[dbt-core]'
-
 # ── DataHub directory structure ────────────────────────────────
 mkdir -p /home/ec2-user/datahub/{recipes,dbt-artifacts}
 chown -R ec2-user:ec2-user /home/ec2-user/datahub
 
 # ── Download DataHub quickstart compose (without Neo4j) ────────
-# Uses the lighter quickstart variant — no graph DB dependency.
 curl -fsSL \
   "https://raw.githubusercontent.com/datahub-project/datahub/master/docker/quickstart/docker-compose-without-neo4j.quickstart.yml" \
   -o /home/ec2-user/datahub/docker-compose.yml
-
 chown ec2-user:ec2-user /home/ec2-user/datahub/docker-compose.yml
 
-# ── Pull images and start DataHub ──────────────────────────────
+# ── Pre-pull ingestion image ───────────────────────────────────
+# acryl/datahub-ingestion has all connectors pre-installed —
+# avoids pip dependency hell on the host entirely.
+docker pull acryl/datahub-ingestion:latest
+
+# ── Pull DataHub images and start ──────────────────────────────
 cd /home/ec2-user/datahub
 sudo -u ec2-user docker-compose pull
 sudo -u ec2-user docker-compose up -d
 
 # ── Snowflake ingestion recipe ─────────────────────────────────
-# Crawls all WHITEGOODS_* databases: schemas, tables, columns.
-# Uses TF_SERVICE_USER (ACCOUNTADMIN) for full visibility.
+# Crawls WHITEGOODS_RAW/TRANSFORM/ANALYTICS every 6 hours.
+# Uses TF_SERVICE_USER (ACCOUNTADMIN) for full database visibility.
 # TODO: replace with a dedicated read-only DataHub role for hardening.
 cat > /home/ec2-user/datahub/recipes/snowflake.yml << 'RECIPE'
 source:
@@ -58,12 +55,12 @@ source:
     warehouse: WHITEGOODS_LOADING_WH
     database_pattern:
       allow:
-        - "^WHITEGOODS_RAW$$"
-        - "^WHITEGOODS_TRANSFORM$$"
-        - "^WHITEGOODS_ANALYTICS$$"
+        - "^WHITEGOODS_RAW$"
+        - "^WHITEGOODS_TRANSFORM$"
+        - "^WHITEGOODS_ANALYTICS$"
     schema_pattern:
       deny:
-        - "^INFORMATION_SCHEMA$$"
+        - "^INFORMATION_SCHEMA$"
     include_table_lineage: true
     include_view_lineage: true
     profiling:
@@ -75,14 +72,14 @@ sink:
 RECIPE
 
 # ── dbt ingestion recipe ───────────────────────────────────────
-# Reads manifest.json + catalog.json synced from S3.
-# Produces model-level lineage: raw source → staging → intermediate → mart.
+# Reads manifest.json + catalog.json synced from S3 by the cron.
+# Produces model-level lineage: raw source -> staging -> intermediate -> mart.
 cat > /home/ec2-user/datahub/recipes/dbt.yml << 'RECIPE'
 source:
   type: dbt
   config:
-    manifest_path: /home/ec2-user/datahub/dbt-artifacts/manifest.json
-    catalog_path: /home/ec2-user/datahub/dbt-artifacts/catalog.json
+    manifest_path: /dbt-artifacts/manifest.json
+    catalog_path: /dbt-artifacts/catalog.json
     target_platform: snowflake
     target_platform_instance: ${snowflake_account}
     load_schemas: true
@@ -117,13 +114,16 @@ RECIPE
 chown -R ec2-user:ec2-user /home/ec2-user/datahub/recipes
 
 # ── Ingestion cron ─────────────────────────────────────────────
+# Runs ingestion via Docker — uses the pre-pulled acryl/datahub-ingestion
+# image which has all connectors pre-installed. No host pip install needed.
+#
 # dbt:      syncs artifacts from S3 then ingests at 20:30 UTC
 #           (30 min after the Airflow dbt DAG runs at 20:00 UTC)
 # Snowflake: full metadata crawl every 6 hours
 # Airflow:   pipeline metadata every 6 hours
 cat > /etc/cron.d/datahub-ingestion << CRON
-30 20 * * * root aws s3 sync s3://${airflow_s3_bucket}/datahub/dbt/ /home/ec2-user/datahub/dbt-artifacts/ --region ap-southeast-2 && /usr/local/bin/datahub ingest -c /home/ec2-user/datahub/recipes/dbt.yml 2>/dev/null || true
-0 */6 * * * root /usr/local/bin/datahub ingest -c /home/ec2-user/datahub/recipes/snowflake.yml 2>/dev/null || true
-0 */6 * * * root /usr/local/bin/datahub ingest -c /home/ec2-user/datahub/recipes/airflow.yml 2>/dev/null || true
+30 20 * * * root aws s3 sync s3://${airflow_s3_bucket}/datahub/dbt/ /home/ec2-user/datahub/dbt-artifacts/ --region ap-southeast-2 && docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes -v /home/ec2-user/datahub/dbt-artifacts:/dbt-artifacts acryl/datahub-ingestion:latest datahub ingest -c /recipes/dbt.yml 2>/dev/null || true
+0 */6 * * * root docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes acryl/datahub-ingestion:latest datahub ingest -c /recipes/snowflake.yml 2>/dev/null || true
+0 */6 * * * root docker run --rm --network host -v /home/ec2-user/datahub/recipes:/recipes acryl/datahub-ingestion:latest datahub ingest -c /recipes/airflow.yml 2>/dev/null || true
 CRON
 chmod 644 /etc/cron.d/datahub-ingestion
