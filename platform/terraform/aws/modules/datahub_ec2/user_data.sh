@@ -38,7 +38,10 @@ docker pull acryldata/datahub-ingestion:head || true
 # ── Pull DataHub images and start ──────────────────────────────
 cd /home/ec2-user/datahub
 sudo -u ec2-user docker-compose pull
-sudo -u ec2-user docker-compose up -d
+# datahub-upgrade (schema migration) can fail on first boot if Elasticsearch
+# isn't ready yet — it will restart and succeed once ES is healthy.
+# || true prevents set -e from aborting the entire bootstrap.
+sudo -u ec2-user docker-compose up -d || true
 
 # ── Snowflake ingestion recipe ─────────────────────────────────
 # Crawls WHITEGOODS_RAW/TRANSFORM/ANALYTICS every 6 hours.
