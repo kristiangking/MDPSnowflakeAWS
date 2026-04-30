@@ -49,6 +49,19 @@ module "airflow_ec2" {
   airflow_s3_bucket      = module.s3.mwaa_bucket_name
 }
 
+module "datahub_ec2" {
+  source             = "./modules/datahub_ec2"
+  project            = var.project
+  environment        = var.environment
+  vpc_id             = module.networking.vpc_id
+  public_subnet_id   = module.networking.public_subnet_ids[0]
+  instance_type      = var.datahub_instance_type
+  airflow_s3_bucket  = module.s3.mwaa_bucket_name
+  snowflake_account  = var.snowflake_account
+  snowflake_password = var.datahub_snowflake_password
+  airflow_host       = module.airflow_ec2.public_ip
+}
+
 # ── SSM Parameter Store — platform outputs ─────────────────────
 # Written here so data product teams can discover platform values
 # without accessing Terraform state.
@@ -56,6 +69,18 @@ resource "aws_ssm_parameter" "airflow_public_ip" {
   name  = "/mdp/platform/airflow_public_ip"
   type  = "String"
   value = module.airflow_ec2.public_ip
+
+  tags = {
+    Project     = var.project
+    Environment = var.environment
+    ManagedBy   = "terraform-platform"
+  }
+}
+
+resource "aws_ssm_parameter" "datahub_url" {
+  name  = "/mdp/platform/datahub_url"
+  type  = "String"
+  value = module.datahub_ec2.datahub_url
 
   tags = {
     Project     = var.project

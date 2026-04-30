@@ -93,7 +93,7 @@ with DAG(
         ),
     )
 
-    # --- Generate docs (optional, keeps docs fresh) ---
+    # --- Generate docs (produces manifest.json + catalog.json) ---
     dbt_docs_generate = BashOperator(
         task_id="dbt_docs_generate",
         bash_command=(
@@ -101,6 +101,23 @@ with DAG(
             f"--project-dir {DBT_PROJECT_DIR} "
             f"--profiles-dir {DBT_PROFILES_DIR} "
             f"--target dev "
+        ),
+    )
+
+    # --- Upload dbt artifacts to S3 for DataHub ingestion ---
+    # DataHub EC2 syncs from s3://<airflow-bucket>/datahub/dbt/ on a cron
+    # (30 min after this DAG runs) to keep lineage metadata fresh.
+    upload_dbt_artifacts = BashOperator(
+        task_id="upload_dbt_artifacts",
+        bash_command=(
+            "BUCKET=$(aws ssm get-parameter "
+            "  --name /mdp/platform/airflow_s3_bucket "
+            "  --query Parameter.Value --output text "
+            "  --region ap-southeast-2) && "
+            f"aws s3 cp {DBT_PROJECT_DIR}/target/manifest.json "
+            "  s3://$BUCKET/datahub/dbt/manifest.json --region ap-southeast-2 && "
+            f"aws s3 cp {DBT_PROJECT_DIR}/target/catalog.json "
+            "  s3://$BUCKET/datahub/dbt/catalog.json --region ap-southeast-2"
         ),
     )
 
@@ -115,5 +132,6 @@ with DAG(
         >> dbt_run_marts
         >> dbt_test
         >> dbt_docs_generate
+        >> upload_dbt_artifacts
         >> end
     )

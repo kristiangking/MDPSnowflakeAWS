@@ -14,6 +14,15 @@ variable "airflow_instance_type" {
   default = "t3.small"
 }
 
+variable "datahub_instance_type" {
+  default = "t3.large"
+}
+
+variable "datahub_snowflake_password" {
+  description = "TF_SERVICE_USER password — used by DataHub Snowflake ingestion (ACCOUNTADMIN required to crawl all databases)."
+  sensitive   = true
+}
+
 # ── Snowflake dbt service account credentials ──────────────────
 # Stored in Secrets Manager so Airflow can retrieve them at runtime.
 variable "snowflake_account" {

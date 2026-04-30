@@ -92,7 +92,7 @@ ENVFILE
 # Create a custom Airflow image with dbt-snowflake baked in
 cat > /home/ec2-user/airflow/Dockerfile << 'DOCKERFILE'
 FROM apache/airflow:2.10.3
-RUN pip install dbt-snowflake
+RUN pip install dbt-snowflake awscli
 DOCKERFILE
 
 # Build the custom image
