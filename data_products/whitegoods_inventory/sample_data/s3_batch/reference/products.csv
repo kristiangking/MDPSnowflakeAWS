@@ -1,0 +1,13 @@
+product_id,sku,name,category,brand,supplier_id,unit_cost,rrp,reorder_point,reorder_qty,weight_kg
+PRD-001,FM-FR-680,680L French Door Fridge,Refrigeration,FrostMaster,SUP-001,1299.0,1899.0,3,10,95
+PRD-002,FM-TM-500,500L Top Mount Fridge,Refrigeration,FrostMaster,SUP-001,799.0,1199.0,5,15,72
+PRD-003,CZ-BR-120,Bar Fridge 120L,Refrigeration,CoolZone,SUP-002,349.0,499.0,8,20,28
+PRD-004,CW-DW-FS,Freestanding Dishwasher 60cm,Dishwasher,CleanWave,SUP-001,699.0,999.0,4,12,52
+PRD-005,CW-DW-BI,Built-in Dishwasher 60cm,Dishwasher,CleanWave,SUP-001,899.0,1299.0,4,10,49
+PRD-006,SP-WM-10F,10kg Front Load Washer,Laundry,SpinPro,SUP-003,949.0,1399.0,4,12,68
+PRD-007,SP-WM-8T,8kg Top Load Washer,Laundry,SpinPro,SUP-003,649.0,949.0,5,15,58
+PRD-008,SP-DR-8HP,8kg Heat Pump Dryer,Laundry,SpinPro,SUP-003,1149.0,1699.0,3,8,60
+PRD-009,SX-VC-CS,Cordless Stick Vacuum,Vacuum,SuctionX,SUP-002,399.0,599.0,10,25,3
+PRD-010,SX-VC-RB,Robot Vacuum + Mop,Vacuum,SuctionX,SUP-002,549.0,799.0,8,20,4
+PRD-011,CP-VC-BR,Barrel Vacuum 2400W,Vacuum,ClearPath,SUP-002,249.0,369.0,10,25,7
+PRD-012,CP-VC-UP,Upright Vacuum HEPA,Vacuum,ClearPath,SUP-002,319.0,469.0,8,20,6
