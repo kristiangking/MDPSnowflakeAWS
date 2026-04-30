@@ -30,6 +30,31 @@ curl -fsSL \
   -o /home/ec2-user/datahub/docker-compose.yml
 chown ec2-user:ec2-user /home/ec2-user/datahub/docker-compose.yml
 
+# ── Generate .env with required signing key ────────────────────
+# Newer DataHub quickstart compose requires authentication.tokenService.signingKey
+# to be explicitly provided — it no longer auto-generates one.
+SIGNING_KEY=$(openssl rand -hex 32)
+cat > /home/ec2-user/datahub/.env << ENVFILE
+DATAHUB_TOKEN_SERVICE_SIGNING_KEY=${SIGNING_KEY}
+ENVFILE
+chown ec2-user:ec2-user /home/ec2-user/datahub/.env
+
+# ── Compose override: inject signing key into upgrade + GMS ────
+# The quickstart compose does not pass the signing key to datahub-upgrade
+# by default. This override adds it so SystemUpdate can initialise
+# the token service without failing.
+cat > /home/ec2-user/datahub/docker-compose.override.yml << 'OVERRIDE'
+services:
+  datahub-upgrade:
+    environment:
+      - DATAHUB_TOKEN_SERVICE_SIGNING_KEY=${DATAHUB_TOKEN_SERVICE_SIGNING_KEY}
+      - METADATA_SERVICE_AUTH_ENABLED=false
+  datahub-gms:
+    environment:
+      - DATAHUB_TOKEN_SERVICE_SIGNING_KEY=${DATAHUB_TOKEN_SERVICE_SIGNING_KEY}
+OVERRIDE
+chown ec2-user:ec2-user /home/ec2-user/datahub/docker-compose.override.yml
+
 # ── Pre-pull ingestion image ───────────────────────────────────
 # acryldata/datahub-ingestion has all connectors pre-installed —
 # avoids pip dependency hell on the host entirely.
