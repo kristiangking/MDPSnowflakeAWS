@@ -1,8 +1,8 @@
 # dbt
-dbt/whitegoods_inventory/target/
-dbt/whitegoods_inventory/dbt_packages/
-dbt/whitegoods_inventory/logs/
-dbt/whitegoods_inventory/venv/
+data_products/whitegoods_inventory/dbt/whitegoods_inventory/target/
+data_products/whitegoods_inventory/dbt/whitegoods_inventory/dbt_packages/
+data_products/whitegoods_inventory/dbt/whitegoods_inventory/logs/
+data_products/whitegoods_inventory/dbt/whitegoods_inventory/venv/
 
 # Terraform
 **/.terraform/

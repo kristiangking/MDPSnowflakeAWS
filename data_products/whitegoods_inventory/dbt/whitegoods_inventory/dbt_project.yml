@@ -1,0 +1,23 @@
+name: 'whitegoods_inventory'
+version: '1.0.0'
+config-version: 2
+
+profile: 'whitegoods_inventory'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+
+models:
+  whitegoods_inventory:
+    staging:
+      +schema: staging
+      +materialized: view
+      +database: WHITEGOODS_TRANSFORM
+    intermediate:
+      +schema: intermediate
+      +materialized: table
+      +database: WHITEGOODS_TRANSFORM
+    marts:
+      +schema: marts
+      +materialized: table
+      +database: WHITEGOODS_ANALYTICS
