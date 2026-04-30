@@ -67,7 +67,10 @@ resource "aws_instance" "airflow" {
     volume_type = "gp3"
   }
 
-  user_data = file("${path.module}/user_data.sh")
+  user_data = templatefile("${path.module}/user_data.sh", {
+    airflow_s3_bucket = var.airflow_s3_bucket
+  })
+  user_data_replace_on_change = true
 
   tags = {
     Name        = "${var.project}-${var.environment}-airflow"

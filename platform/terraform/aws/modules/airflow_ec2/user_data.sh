@@ -68,10 +68,20 @@ chmod -R 775 /home/ec2-user/airflow/logs \
              /home/ec2-user/airflow/dags \
              /home/ec2-user/airflow/plugins
 
-# Copy DAG from repo into Airflow dags folder
-cp /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/airflow/dags/whitegoods_dbt_dag.py \
-   /home/ec2-user/airflow/dags/
-chown 50000:0 /home/ec2-user/airflow/dags/whitegoods_dbt_dag.py
+# ── DAG sync from S3 ───────────────────────────────────────────
+# Data product Terraform uploads DAGs to s3://<airflow-bucket>/dags/
+# This allows data product owners to deploy DAGs independently
+# without touching platform infrastructure.
+#
+# Initial sync at boot (no-op if no data products deployed yet)
+aws s3 sync s3://${airflow_s3_bucket}/dags/ /home/ec2-user/airflow/dags/ --region ap-southeast-2 || true
+chown -R 50000:0 /home/ec2-user/airflow/dags/
+
+# Cron picks up new/updated DAGs every minute
+cat > /etc/cron.d/airflow-dag-sync << 'CRON'
+* * * * * root aws s3 sync s3://${airflow_s3_bucket}/dags/ /home/ec2-user/airflow/dags/ --region ap-southeast-2 && chown -R 50000:0 /home/ec2-user/airflow/dags/ 2>/dev/null || true
+CRON
+chmod 644 /etc/cron.d/airflow-dag-sync
 
 # .env tells compose the UID to use for the airflow user inside containers
 cat > /home/ec2-user/airflow/.env << 'ENVFILE'

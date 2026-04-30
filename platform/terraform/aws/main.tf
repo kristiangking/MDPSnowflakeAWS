@@ -46,6 +46,7 @@ module "airflow_ec2" {
   instance_type          = var.airflow_instance_type
   airflow_execution_role = module.iam.mwaa_execution_role_arn
   snowflake_secret_arn   = module.iam.snowflake_secret_arn
+  airflow_s3_bucket      = module.s3.mwaa_bucket_name
 }
 
 # ── SSM Parameter Store — platform outputs ─────────────────────

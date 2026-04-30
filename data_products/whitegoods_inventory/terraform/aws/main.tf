@@ -90,6 +90,22 @@ resource "aws_iam_role_policy" "snowflake_s3" {
   })
 }
 
+# ── DAG deployment to Airflow S3 bucket ────────────────────────
+# Reads the Airflow S3 bucket name written by platform Terraform.
+# Uploading here means data product owners can deploy their DAG
+# by running this Terraform — no platform re-deployment needed.
+# The EC2 cron job syncs from this prefix every minute.
+data "aws_ssm_parameter" "airflow_s3_bucket" {
+  name = "/mdp/platform/airflow_s3_bucket"
+}
+
+resource "aws_s3_object" "dag" {
+  bucket = data.aws_ssm_parameter.airflow_s3_bucket.value
+  key    = "dags/whitegoods_dbt_dag.py"
+  source = "${path.module}/../../airflow/dags/whitegoods_dbt_dag.py"
+  etag   = filemd5("${path.module}/../../airflow/dags/whitegoods_dbt_dag.py")
+}
+
 # ── SSM Parameter Store — data product AWS outputs ─────────────
 # Written so the data product Snowflake Terraform can read the
 # S3 role ARN without needing access to this module's state.
@@ -110,6 +126,19 @@ resource "aws_ssm_parameter" "raw_bucket_name" {
   name  = "/mdp/data_products/whitegoods_inventory/raw_bucket_name"
   type  = "String"
   value = module.s3_raw.bucket_name
+
+  tags = {
+    Project     = var.project
+    Environment = var.environment
+    DataProduct = "whitegoods_inventory"
+    ManagedBy   = "terraform-data-product"
+  }
+}
+
+resource "aws_ssm_parameter" "inventory_events_queue_url" {
+  name  = "/mdp/data_products/whitegoods_inventory/inventory_events_queue_url"
+  type  = "String"
+  value = module.sqs_lambda.queue_url
 
   tags = {
     Project     = var.project
