@@ -1,4 +1,0 @@
-supplier_id,name,lead_time_days,contact_email,payment_terms
-SUP-001,ApplianceCo AU,14,orders@applianceco.com.au,NET30
-SUP-002,Pacific Whitegoods,21,supply@pacificwg.com.au,NET45
-SUP-003,Hometech Direct,10,purchasing@hometechdirect.com.au,NET30
