@@ -11,6 +11,13 @@
       "meta": { "notes": "Table must have at least one purchase order." }
     },
     {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "kwargs": { "min_value": 1, "max_value": 10 },
+      "meta": {
+        "notes": "TEST FIXTURE — intentional failure. Sample data has 39 POs so max_value: 10 will always fail. Used to verify the DAG completes successfully despite GX failures. Remove once behaviour is confirmed."
+      }
+    },
+    {
       "expectation_type": "expect_column_values_to_not_be_null",
       "kwargs": { "column": "po_id" },
       "meta": { "notes": "Every purchase order must have a PO ID." }
