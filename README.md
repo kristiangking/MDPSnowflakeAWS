@@ -344,6 +344,104 @@ Dashboard: `https://app.snowflake.com/<org>/<account>/streamlit-apps/WHITEGOODS_
 
 ---
 
+## Data quality checks (Great Expectations)
+
+GX runs as a task inside the `whitegoods_dbt_pipeline` Airflow DAG, immediately after dbt completes. It validates the `WHITEGOODS_ANALYTICS.MARTS` tables and surfaces results in two places: the `WHITEGOODS_RAW.GX.VALIDATIONS` Snowflake table, and the **Quality** tab on each dataset page in DataHub.
+
+### Where expectations live
+
+```
+data_products/whitegoods_inventory/great_expectations/
+├── expectations/
+│   ├── mart_inventory_summary.json
+│   ├── mart_purchase_order_status.json
+│   └── mart_receiving_activity.json
+└── run_gx_checkpoint.py          ← runner called by Airflow
+```
+
+Each JSON file is an **expectation suite** for one mart table. The file name (without `.json`) must exactly match the mart table name in lowercase — e.g. `mart_inventory_summary.json` validates `WHITEGOODS_ANALYTICS.MARTS.MART_INVENTORY_SUMMARY`.
+
+### Expectation suite format
+
+```json
+{
+  "expectation_suite_name": "mart_inventory_summary",
+  "meta": {
+    "great_expectations_version": "0.18.19",
+    "notes": "Human-readable description of what this suite validates."
+  },
+  "expectations": [
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "kwargs": { "min_value": 1 },
+      "meta": { "notes": "Table must have at least one row." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "product_id" },
+      "meta": { "notes": "Every row must have a product ID." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "status",
+        "value_set": ["ACTIVE", "DISCONTINUED"]
+      },
+      "meta": { "notes": "Status must be one of the valid values." }
+    }
+  ]
+}
+```
+
+### Commonly used expectation types
+
+| Expectation type | What it checks | Key kwargs |
+|---|---|---|
+| `expect_table_row_count_to_be_between` | Row count within range | `min_value`, `max_value` |
+| `expect_column_values_to_not_be_null` | No nulls in column | `column` |
+| `expect_column_values_to_be_unique` | No duplicate values | `column` |
+| `expect_column_values_to_be_in_set` | Values from allowed list | `column`, `value_set` |
+| `expect_column_values_to_be_between` | Numeric range | `column`, `min_value`, `max_value` |
+| `expect_column_values_to_match_regex` | Regex pattern match | `column`, `regex` |
+
+Full reference: https://greatexpectations.io/expectations
+
+### Adding a check to an existing suite
+
+Open the relevant JSON file and add an entry to the `expectations` array. Example — adding a non-null check on `warehouse_id` to `mart_inventory_summary.json`:
+
+```json
+{
+  "expectation_type": "expect_column_values_to_not_be_null",
+  "kwargs": { "column": "warehouse_id" },
+  "meta": { "notes": "Every inventory row must reference a warehouse." }
+}
+```
+
+Commit and push. The check runs automatically on the next Airflow DAG execution.
+
+### Adding a suite for a new mart table
+
+1. Create a new file in `expectations/` named `<mart_table_name_lowercase>.json`
+2. Follow the format above — set `expectation_suite_name` to the same value as the filename (without `.json`)
+3. The runner automatically discovers all `*.json` files in the `expectations/` directory — no other changes required
+
+### Viewing results
+
+**Snowflake** — query the raw results directly:
+
+```sql
+SELECT suite_name, expectation_type, column_name, success, observed_value, unexpected_count, run_time
+FROM WHITEGOODS_RAW.GX.VALIDATIONS
+ORDER BY run_time DESC;
+```
+
+**DataHub** — open any mart dataset (e.g. `whitegoods_analytics.marts.mart_inventory_summary`) and click the **Quality** tab. Each expectation appears with a PASS/FAIL badge, observed value, and run timestamp.
+
+**Airflow** — the `gx_checkpoint` task always exits 0 (the DAG succeeds regardless of validation outcomes). Failures are surfaced via Snowflake and DataHub, not by failing the pipeline. Pass `--fail-on-error` to the runner if you want the task to fail on validation failures instead.
+
+---
+
 ## Notes
 
 - `terraform.tfvars` files are gitignored — never commit credentials

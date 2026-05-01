@@ -260,7 +260,7 @@ def emit_datahub_assertions(results: list, run_id: str, gms_url: str) -> None:
       2. assertionRunEvent  — the PASS/FAIL result for this specific run
 
     Assertions appear on the dataset page in DataHub under the
-    "Validations" / "Assertions" tab with a PASS/FAIL badge.
+    "Quality" tab with a PASS/FAIL badge per expectation.
     """
     run_ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     emitted = 0
