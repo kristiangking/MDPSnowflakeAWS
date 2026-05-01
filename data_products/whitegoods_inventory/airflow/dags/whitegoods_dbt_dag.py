@@ -22,7 +22,6 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.utils.dates import days_ago
-from airflow.utils.trigger_rule import TriggerRule
 
 DBT_PROJECT_DIR = "/opt/airflow/dbt/whitegoods_inventory"
 DBT_PROFILES_DIR = "/home/airflow/.dbt"
@@ -123,12 +122,8 @@ with DAG(
     )
 
     # --- Generate docs (produces manifest.json + catalog.json) ---
-    # trigger_rule=all_done: runs even if gx_checkpoint or dbt_test fail,
-    # so DataHub lineage stays fresh and docs are always regenerated.
-    # GX/test failures are still visible as failed tasks in the DAG run.
     dbt_docs_generate = BashOperator(
         task_id="dbt_docs_generate",
-        trigger_rule=TriggerRule.ALL_DONE,
         bash_command=(
             f"{DBT_BIN} docs generate "
             f"--project-dir {DBT_PROJECT_DIR} "

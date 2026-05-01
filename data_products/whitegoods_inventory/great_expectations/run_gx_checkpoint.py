@@ -13,8 +13,9 @@ Usage (called by Airflow BashOperator):
         --region ap-southeast-2
 
 Exit codes:
-    0 — all expectations passed (or --fail-on-error not set)
-    1 — one or more expectations failed (only when --fail-on-error is set)
+    0 — always (validation failures are surfaced via S3 → Snowpipe → dashboard,
+         not via process exit code). Pass --fail-on-error to override this
+         behaviour if you want the Airflow task itself to fail on failures.
 """
 
 import argparse
@@ -184,8 +185,12 @@ def main():
     parser.add_argument(
         "--fail-on-error",
         action="store_true",
-        default=True,
-        help="Exit with code 1 if any expectations fail (default: True)",
+        default=False,
+        help=(
+            "Exit with code 1 if any expectations fail. "
+            "Default is False — failures are surfaced via the GX dashboard, "
+            "not by failing the Airflow task."
+        ),
     )
     args = parser.parse_args()
 
