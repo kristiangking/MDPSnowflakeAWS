@@ -175,6 +175,28 @@ def write_to_s3(results: list, run_id: str, bucket: str, region: str) -> str:
 
 # ── DataHub assertion emission ─────────────────────────────────────────────────
 
+# Maps GX expectation types to DataHub DatasetAssertionStdOperator enum values.
+# Used to satisfy the required `operator` field on assertionInfo.datasetAssertion.
+GX_OPERATOR_MAP: dict[str, str] = {
+    "expect_column_values_to_not_be_null":       "NOT_NULL",
+    "expect_column_values_to_be_null":            "IS_NULL",
+    "expect_column_values_to_be_unique":          "NOT_EQUAL_TO",
+    "expect_column_values_to_be_in_set":          "IN",
+    "expect_column_values_to_not_be_in_set":      "NOT_IN",
+    "expect_column_values_to_be_between":         "BETWEEN",
+    "expect_column_values_to_match_regex":        "REGEX_MATCH",
+    "expect_column_values_to_match_like_pattern": "REGEX_MATCH",
+    "expect_table_row_count_to_be_between":       "BETWEEN",
+    "expect_table_row_count_to_equal":            "EQUAL_TO",
+    "expect_column_mean_to_be_between":           "BETWEEN",
+    "expect_column_median_to_be_between":         "BETWEEN",
+    "expect_column_stdev_to_be_between":          "BETWEEN",
+    "expect_column_sum_to_be_between":            "BETWEEN",
+    "expect_column_min_to_be_between":            "BETWEEN",
+    "expect_column_max_to_be_between":            "BETWEEN",
+}
+
+
 def _assertion_urn(suite_name: str, expectation_type: str, column_name: str | None) -> str:
     """Stable, deterministic assertion URN derived from the check identity."""
     key = f"gx:{suite_name}:{expectation_type}:{column_name or '__table__'}"
@@ -194,16 +216,31 @@ def _dataset_urn(data_asset_name: str) -> str:
     )
 
 
-def _upsert_entity(gms_url: str, entity_urn: str, aspects: dict) -> None:
+def _ingest_proposal(
+    gms_url: str,
+    entity_urn: str,
+    entity_type: str,
+    aspect_name: str,
+    aspect_value: dict,
+) -> None:
     """
-    Upsert an assertion entity via DataHub OpenAPI v3.
-    Accepts a dict of {aspectName: aspectValue} pairs.
-    DataHub v1.5.0 supports batch entity upserts at /openapi/v3/entity/assertion.
+    Emit a single MCP via the DataHub legacy /aspects?action=ingestProposal endpoint.
+    This endpoint is stable across DataHub versions and gives clear validation errors.
     """
-    payload = [{"urn": entity_urn, **aspects}]
+    payload = {
+        "proposal": {
+            "entityType": entity_type,
+            "entityUrn": entity_urn,
+            "aspectName": aspect_name,
+            "changeType": "UPSERT",
+            "aspect": {
+                "value": json.dumps(aspect_value),
+                "contentType": "application/json",
+            },
+        }
+    }
     resp = requests.post(
-        f"{gms_url}/openapi/v3/entity/assertion",
-        params={"async": "false", "systemMetadata": "false"},
+        f"{gms_url}/aspects?action=ingestProposal",
         json=payload,
         headers={"Content-Type": "application/json"},
         timeout=10,
@@ -216,38 +253,39 @@ def _upsert_entity(gms_url: str, entity_urn: str, aspects: dict) -> None:
 
 def emit_datahub_assertions(results: list, run_id: str, gms_url: str) -> None:
     """
-    Emit GX validation results as DataHub assertions.
+    Emit GX validation results as DataHub assertions via the legacy ingestProposal API.
 
     For each expectation result we emit two MCPs:
-      1. assertionInfo  — defines the assertion (upserted idempotently on each run)
-      2. assertionRunEvent — the PASS/FAIL result for this run
+      1. assertionInfo      — defines the assertion (upserted idempotently on each run)
+      2. assertionRunEvent  — the PASS/FAIL result for this specific run
 
     Assertions appear on the dataset page in DataHub under the
-    "Validations" / "Assertions" tab.
+    "Validations" / "Assertions" tab with a PASS/FAIL badge.
     """
     run_ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     emitted = 0
     errors = 0
 
     for result in results:
-        suite_name      = result["suite_name"]
+        suite_name       = result["suite_name"]
         expectation_type = result["expectation_type"]
-        column_name     = result.get("column_name")
-        data_asset_name = result["data_asset_name"]
-        success         = result["success"]
+        column_name      = result.get("column_name")
+        data_asset_name  = result["data_asset_name"]
+        success          = result["success"]
 
         assertion_urn = _assertion_urn(suite_name, expectation_type, column_name)
         dataset_urn   = _dataset_urn(data_asset_name)
 
-        # ── 1. assertionInfo (what this assertion checks) ──────────
-        scope = "DATASET_COLUMN" if column_name else "DATASET_ROWS"
-        dataset_assertion = {
-            "dataset": dataset_urn,
-            "scope": scope,
-            "nativeType": expectation_type,
-            "nativeParameters": (
-                {"column": column_name} if column_name else {}
-            ),
+        # ── 1. assertionInfo (what this assertion checks) ──────────────────────
+        scope    = "DATASET_COLUMN" if column_name else "DATASET_ROWS"
+        operator = GX_OPERATOR_MAP.get(expectation_type, "BETWEEN")  # safe default
+
+        dataset_assertion: dict = {
+            "dataset":          dataset_urn,
+            "scope":            scope,
+            "operator":         operator,
+            "nativeType":       expectation_type,
+            "nativeParameters": {"column": column_name} if column_name else {},
         }
         if column_name:
             dataset_assertion["fields"] = [
@@ -264,16 +302,17 @@ def emit_datahub_assertions(results: list, run_id: str, gms_url: str) -> None:
             },
         }
 
-        # ── 2. assertionRunEvent (this run's pass/fail) ────────────
-        native_results = {}
-        if result["unexpected_count"] is not None:
-            native_results["unexpected_count"]   = str(result["unexpected_count"])
-            native_results["unexpected_percent"]  = str(result["unexpected_percent"])
-        if result["observed_value"] is not None:
+        # ── 2. assertionRunEvent (this run's pass/fail) ────────────────────────
+        native_results: dict = {}
+        if result.get("unexpected_count") is not None:
+            native_results["unexpected_count"]  = str(result["unexpected_count"])
+            native_results["unexpected_percent"] = str(result["unexpected_percent"])
+        if result.get("observed_value") is not None:
             native_results["observed_value"] = str(result["observed_value"])
 
         run_event = {
             "timestampMillis": run_ts_ms,
+            "assertionUrn":    assertion_urn,   # required by DataHub v1.5+
             "asserteeUrn":     dataset_urn,
             "runId":           run_id,
             "status":          "COMPLETE",
@@ -284,10 +323,8 @@ def emit_datahub_assertions(results: list, run_id: str, gms_url: str) -> None:
         }
 
         try:
-            _upsert_entity(gms_url, assertion_urn, {
-                "assertionInfo":    assertion_info,
-                "assertionRunEvent": run_event,
-            })
+            _ingest_proposal(gms_url, assertion_urn, "assertion", "assertionInfo",    assertion_info)
+            _ingest_proposal(gms_url, assertion_urn, "assertion", "assertionRunEvent", run_event)
             emitted += 1
         except Exception as exc:
             print(f"  WARN: failed to emit assertion for {suite_name}/{expectation_type}: {exc}")
