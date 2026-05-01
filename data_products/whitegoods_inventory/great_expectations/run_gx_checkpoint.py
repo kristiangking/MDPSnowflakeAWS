@@ -194,27 +194,24 @@ def _dataset_urn(data_asset_name: str) -> str:
     )
 
 
-def _ingest_proposal(gms_url: str, entity_urn: str, aspect_name: str, aspect_value: dict) -> None:
-    """POST a single MetadataChangeProposal to DataHub GMS."""
-    payload = {
-        "proposal": {
-            "entityType": "assertion",
-            "entityUrn": entity_urn,
-            "changeType": "UPSERT",
-            "aspectName": aspect_name,
-            "aspect": {
-                "value": json.dumps(aspect_value),
-                "contentType": "application/json",
-            },
-        }
-    }
+def _upsert_entity(gms_url: str, entity_urn: str, aspects: dict) -> None:
+    """
+    Upsert an assertion entity via DataHub OpenAPI v3.
+    Accepts a dict of {aspectName: aspectValue} pairs.
+    DataHub v1.5.0 supports batch entity upserts at /openapi/v3/entity/assertion.
+    """
+    payload = [{"urn": entity_urn, **aspects}]
     resp = requests.post(
-        f"{gms_url}/aspects?action=ingestProposal",
+        f"{gms_url}/openapi/v3/entity/assertion",
+        params={"async": "false", "systemMetadata": "false"},
         json=payload,
         headers={"Content-Type": "application/json"},
         timeout=10,
     )
-    resp.raise_for_status()
+    if not resp.ok:
+        raise requests.HTTPError(
+            f"{resp.status_code} {resp.reason} — {resp.text[:400]}"
+        )
 
 
 def emit_datahub_assertions(results: list, run_id: str, gms_url: str) -> None:
@@ -287,8 +284,10 @@ def emit_datahub_assertions(results: list, run_id: str, gms_url: str) -> None:
         }
 
         try:
-            _ingest_proposal(gms_url, assertion_urn, "assertionInfo",    assertion_info)
-            _ingest_proposal(gms_url, assertion_urn, "assertionRunEvent", run_event)
+            _upsert_entity(gms_url, assertion_urn, {
+                "assertionInfo":    assertion_info,
+                "assertionRunEvent": run_event,
+            })
             emitted += 1
         except Exception as exc:
             print(f"  WARN: failed to emit assertion for {suite_name}/{expectation_type}: {exc}")
