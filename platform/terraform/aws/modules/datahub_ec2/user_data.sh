@@ -109,9 +109,6 @@ source:
     manifest_path: /dbt-artifacts/manifest.json
     catalog_path: /dbt-artifacts/catalog.json
     target_platform: snowflake
-    target_platform_instance: ${snowflake_account}
-    load_schemas: true
-    load_ownership: true
 sink:
   type: datahub-rest
   config:
