@@ -19,17 +19,20 @@ Exit codes:
 """
 
 import argparse
+import hashlib
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 import boto3
+import requests
 import yaml
 
 ANALYTICS_DB = "WHITEGOODS_ANALYTICS"
 MART_SCHEMA = "MARTS"
 SSM_BUCKET_PARAM = "/mdp/data_products/whitegoods_inventory/raw_bucket_name"
+SSM_DATAHUB_GMS_PARAM = "/mdp/platform/datahub_gms_url"
 S3_PREFIX = "great_expectations/results"
 
 
@@ -47,6 +50,15 @@ def get_raw_bucket(region: str) -> str:
     """Read the raw S3 bucket name from SSM Parameter Store."""
     ssm = boto3.client("ssm", region_name=region)
     return ssm.get_parameter(Name=SSM_BUCKET_PARAM)["Parameter"]["Value"]
+
+
+def get_datahub_gms_url(region: str) -> str | None:
+    """Read the DataHub GMS URL from SSM. Returns None if not found."""
+    ssm = boto3.client("ssm", region_name=region)
+    try:
+        return ssm.get_parameter(Name=SSM_DATAHUB_GMS_PARAM)["Parameter"]["Value"]
+    except ssm.exceptions.ParameterNotFound:
+        return None
 
 
 def build_connection_string(creds: dict) -> str:
@@ -161,6 +173,131 @@ def write_to_s3(results: list, run_id: str, bucket: str, region: str) -> str:
     return f"s3://{bucket}/{key}"
 
 
+# ── DataHub assertion emission ─────────────────────────────────────────────────
+
+def _assertion_urn(suite_name: str, expectation_type: str, column_name: str | None) -> str:
+    """Stable, deterministic assertion URN derived from the check identity."""
+    key = f"gx:{suite_name}:{expectation_type}:{column_name or '__table__'}"
+    return f"urn:li:assertion:{hashlib.md5(key.encode()).hexdigest()}"
+
+
+def _dataset_urn(data_asset_name: str) -> str:
+    """
+    Build a Snowflake dataset URN from the fully-qualified table name.
+    DataHub stores Snowflake datasets in lowercase: db.schema.table
+    e.g. WHITEGOODS_ANALYTICS.MARTS.MART_INVENTORY_SUMMARY
+      → urn:li:dataset:(urn:li:dataPlatform:snowflake,whitegoods_analytics.marts.mart_inventory_summary,PROD)
+    """
+    return (
+        f"urn:li:dataset:(urn:li:dataPlatform:snowflake,"
+        f"{data_asset_name.lower()},PROD)"
+    )
+
+
+def _ingest_proposal(gms_url: str, entity_urn: str, aspect_name: str, aspect_value: dict) -> None:
+    """POST a single MetadataChangeProposal to DataHub GMS."""
+    payload = {
+        "proposal": {
+            "entityType": "assertion",
+            "entityUrn": entity_urn,
+            "changeType": "UPSERT",
+            "aspectName": aspect_name,
+            "aspect": {
+                "value": json.dumps(aspect_value),
+                "contentType": "application/json",
+            },
+        }
+    }
+    resp = requests.post(
+        f"{gms_url}/aspects?action=ingestProposal",
+        json=payload,
+        headers={"Content-Type": "application/json"},
+        timeout=10,
+    )
+    resp.raise_for_status()
+
+
+def emit_datahub_assertions(results: list, run_id: str, gms_url: str) -> None:
+    """
+    Emit GX validation results as DataHub assertions.
+
+    For each expectation result we emit two MCPs:
+      1. assertionInfo  — defines the assertion (upserted idempotently on each run)
+      2. assertionRunEvent — the PASS/FAIL result for this run
+
+    Assertions appear on the dataset page in DataHub under the
+    "Validations" / "Assertions" tab.
+    """
+    run_ts_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    emitted = 0
+    errors = 0
+
+    for result in results:
+        suite_name      = result["suite_name"]
+        expectation_type = result["expectation_type"]
+        column_name     = result.get("column_name")
+        data_asset_name = result["data_asset_name"]
+        success         = result["success"]
+
+        assertion_urn = _assertion_urn(suite_name, expectation_type, column_name)
+        dataset_urn   = _dataset_urn(data_asset_name)
+
+        # ── 1. assertionInfo (what this assertion checks) ──────────
+        scope = "DATASET_COLUMN" if column_name else "DATASET_ROWS"
+        dataset_assertion = {
+            "dataset": dataset_urn,
+            "scope": scope,
+            "nativeType": expectation_type,
+            "nativeParameters": (
+                {"column": column_name} if column_name else {}
+            ),
+        }
+        if column_name:
+            dataset_assertion["fields"] = [
+                f"urn:li:schemaField:({dataset_urn},{column_name.lower()})"
+            ]
+
+        assertion_info = {
+            "type": "DATASET",
+            "datasetAssertion": dataset_assertion,
+            "customProperties": {
+                "suite":           suite_name,
+                "expectationType": expectation_type,
+                "platform":        "great_expectations",
+            },
+        }
+
+        # ── 2. assertionRunEvent (this run's pass/fail) ────────────
+        native_results = {}
+        if result["unexpected_count"] is not None:
+            native_results["unexpected_count"]   = str(result["unexpected_count"])
+            native_results["unexpected_percent"]  = str(result["unexpected_percent"])
+        if result["observed_value"] is not None:
+            native_results["observed_value"] = str(result["observed_value"])
+
+        run_event = {
+            "timestampMillis": run_ts_ms,
+            "asserteeUrn":     dataset_urn,
+            "runId":           run_id,
+            "status":          "COMPLETE",
+            "result": {
+                "type":          "SUCCESS" if success else "FAILURE",
+                "nativeResults": native_results,
+            },
+        }
+
+        try:
+            _ingest_proposal(gms_url, assertion_urn, "assertionInfo",    assertion_info)
+            _ingest_proposal(gms_url, assertion_urn, "assertionRunEvent", run_event)
+            emitted += 1
+        except Exception as exc:
+            print(f"  WARN: failed to emit assertion for {suite_name}/{expectation_type}: {exc}")
+            errors += 1
+
+    status = f"{emitted} emitted" + (f", {errors} errors" if errors else "")
+    print(f"  DataHub assertions: {status}")
+
+
 # ── Entry point ────────────────────────────────────────────────────────────────
 
 def main():
@@ -200,11 +337,13 @@ def main():
 
     creds = get_snowflake_creds(args.profiles_dir)
     bucket = get_raw_bucket(args.region)
+    gms_url = get_datahub_gms_url(args.region)
     connection_string = build_connection_string(creds)
     expectations_dir = Path(args.gx_dir) / "expectations"
 
     print(f"  Target       : {ANALYTICS_DB}.{MART_SCHEMA}")
     print(f"  Results sink : s3://{bucket}/{S3_PREFIX}/")
+    print(f"  DataHub GMS  : {gms_url or 'not configured — assertions skipped'}")
 
     results, run_id = run_validations(connection_string, expectations_dir)
     s3_path = write_to_s3(results, run_id, bucket, args.region)
@@ -229,6 +368,11 @@ def main():
             )
         if args.fail_on_error:
             sys.exit(1)
+
+    # Emit assertions to DataHub if GMS URL is available
+    if gms_url:
+        print("\nEmitting assertions to DataHub...")
+        emit_datahub_assertions(results, run_id, gms_url)
 
     print("Done.")
 

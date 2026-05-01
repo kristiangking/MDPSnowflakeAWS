@@ -89,6 +89,18 @@ resource "aws_ssm_parameter" "datahub_url" {
   }
 }
 
+resource "aws_ssm_parameter" "datahub_gms_url" {
+  name  = "/mdp/platform/datahub_gms_url"
+  type  = "String"
+  value = module.datahub_ec2.gms_url
+
+  tags = {
+    Project     = var.project
+    Environment = var.environment
+    ManagedBy   = "terraform-platform"
+  }
+}
+
 resource "aws_ssm_parameter" "airflow_s3_bucket" {
   name  = "/mdp/platform/airflow_s3_bucket"
   type  = "String"
