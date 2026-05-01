@@ -6,7 +6,7 @@ renamed as (
         po_id,
         supplier_id,
         location_id,
-        status,
+        upper(status) as status,
         created_at,
         expected_delivery_date,
         actual_delivery_date,

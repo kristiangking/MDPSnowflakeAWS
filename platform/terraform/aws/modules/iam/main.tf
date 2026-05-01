@@ -110,6 +110,13 @@ resource "aws_iam_role_policy" "mwaa_execution" {
         Resource = aws_secretsmanager_secret.snowflake.arn
       },
       {
+        # SSM reads — GX runner and DAG tasks look up bucket names and
+        # other platform/data-product config from the /mdp/* namespace.
+        Effect   = "Allow"
+        Action   = ["ssm:GetParameter"]
+        Resource = "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/mdp/*"
+      },
+      {
         Effect = "Allow"
         Action = [
           "kms:Decrypt",

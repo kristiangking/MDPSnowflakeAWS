@@ -135,6 +135,40 @@ resource "aws_ssm_parameter" "raw_bucket_name" {
   }
 }
 
+# ── Airflow S3 write grant for GX results ─────────────────────
+# The GX checkpoint script (run_gx_checkpoint.py) runs on the Airflow
+# EC2 and writes validation results to great_expectations/results/ in
+# this data product's raw bucket. The platform IAM module only knows
+# about the Airflow DAG bucket, so the data product grants the Airflow
+# role write access here — the data product owns the raw bucket and
+# therefore owns the access grant.
+data "aws_iam_role" "airflow" {
+  name = "${var.project}-${var.environment}-mwaa-execution-role"
+}
+
+resource "aws_iam_role_policy" "airflow_gx_s3" {
+  name = "${var.project}-${var.environment}-whitegoods-airflow-gx-s3"
+  role = data.aws_iam_role.airflow.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          module.s3_raw.bucket_arn,
+          "${module.s3_raw.bucket_arn}/great_expectations/*"
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_ssm_parameter" "inventory_events_queue_url" {
   name  = "/mdp/data_products/whitegoods_inventory/inventory_events_queue_url"
   type  = "String"
