@@ -1002,6 +1002,189 @@ resource "snowflake_pipe" "gx_validations" {
   SQL
 }
 
+# ── RAW.API_EVENTS Schema — API ingest events ──────────────────
+# Receives JSON objects written by the platform api_ingest Lambda.
+# Each file is a single enriched JSON object (not an array).
+
+resource "snowflake_schema" "api_events" {
+  database = snowflake_database.raw.name
+  name     = "API_EVENTS"
+  comment  = "Raw events submitted via the platform API ingest endpoint"
+}
+
+resource "snowflake_grant_privileges_to_account_role" "api_events_schema_loader" {
+  account_role_name = snowflake_account_role.loader.name
+  privileges        = ["USAGE", "CREATE TABLE", "CREATE STAGE", "CREATE PIPE"]
+  on_schema {
+    schema_name = "${snowflake_database.raw.name}.${snowflake_schema.api_events.name}"
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "api_events_schema_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["USAGE"]
+  on_schema {
+    schema_name = "${snowflake_database.raw.name}.${snowflake_schema.api_events.name}"
+  }
+}
+
+# ── API Events File Format ─────────────────────────────────────
+# Each file is a single JSON object — no strip_outer_array.
+resource "snowflake_file_format" "api_events_json" {
+  name        = "API_EVENTS_JSON_FORMAT"
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.api_events.name
+  format_type = "JSON"
+  comment     = "Single JSON object format for api_ingest Lambda event files"
+}
+
+# ── API Events External Stage ──────────────────────────────────
+resource "snowflake_stage" "api_events" {
+  name                = "API_EVENTS_STAGE"
+  database            = snowflake_database.raw.name
+  schema              = snowflake_schema.api_events.name
+  url                 = "s3://${data.aws_ssm_parameter.raw_bucket_name.value}/api_events/"
+  storage_integration = snowflake_storage_integration.s3_raw.name
+  comment             = "External stage for API ingest event files"
+}
+
+# ── PO_CHANGE_REQUESTS Table ───────────────────────────────────
+resource "snowflake_table" "po_change_requests" {
+  database = snowflake_database.raw.name
+  schema   = snowflake_schema.api_events.name
+  name     = "PO_CHANGE_REQUESTS"
+  comment  = "Raw PO change requests submitted by suppliers via the API ingest endpoint"
+
+  lifecycle { prevent_destroy = true }
+
+  column {
+    name     = "EVENT_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "PO_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "SUPPLIER_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+  }
+  column {
+    name     = "CHANGE_TYPE"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+    comment  = "QUANTITY_CHANGE | PRICE_CHANGE | DATE_CHANGE | CANCELLATION"
+  }
+  column {
+    name     = "LINE_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "NULL for PO-level changes; populated for line-level changes"
+  }
+  column {
+    name     = "ORIGINAL_VALUE"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "Original qty, price, or date before the change — stored as VARCHAR for flexibility"
+  }
+  column {
+    name     = "REQUESTED_VALUE"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "Requested qty, price, or date after the change"
+  }
+  column {
+    name     = "REASON"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "REQUESTED_BY"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "Email or identifier of the person who submitted the change"
+  }
+  column {
+    name     = "REQUESTED_AT"
+    type     = "TIMESTAMP_NTZ(9)"
+    nullable = true
+    comment  = "Timestamp from the submitted payload"
+  }
+  column {
+    name     = "RECEIVED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
+    nullable = true
+    comment  = "Timestamp when the API ingest Lambda received the event"
+  }
+  column {
+    name     = "_LOADED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
+    nullable = true
+    default { expression = "CURRENT_TIMESTAMP()" }
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "api_events_tables_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    all {
+      object_type_plural = "TABLES"
+      in_schema          = "${snowflake_database.raw.name}.${snowflake_schema.api_events.name}"
+    }
+  }
+  depends_on = [snowflake_table.po_change_requests]
+}
+
+resource "snowflake_grant_privileges_to_account_role" "api_events_future_tables_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    future {
+      object_type_plural = "TABLES"
+      in_schema          = "${snowflake_database.raw.name}.${snowflake_schema.api_events.name}"
+    }
+  }
+}
+
+# ── PIPE_PO_CHANGE_REQUESTS ────────────────────────────────────
+resource "snowflake_pipe" "po_change_requests" {
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.api_events.name
+  name        = "PIPE_PO_CHANGE_REQUESTS"
+  auto_ingest = true
+  comment     = "Snowpipe — loads PO change request JSON objects from S3 api_events/po_changes/"
+
+  depends_on = [snowflake_table.po_change_requests, snowflake_stage.api_events, snowflake_file_format.api_events_json]
+
+  copy_statement = <<-SQL
+    COPY INTO WHITEGOODS_RAW.API_EVENTS.PO_CHANGE_REQUESTS (
+        event_id, po_id, supplier_id, change_type, line_id,
+        original_value, requested_value, reason, requested_by,
+        requested_at, received_at
+      )
+      FROM (
+        SELECT
+          $1:_meta:event_id::VARCHAR,
+          $1:po_id::VARCHAR,
+          $1:supplier_id::VARCHAR,
+          $1:change_type::VARCHAR,
+          $1:line_id::VARCHAR,
+          $1:original_value::VARCHAR,
+          $1:requested_value::VARCHAR,
+          $1:reason::VARCHAR,
+          $1:requested_by::VARCHAR,
+          TRY_TO_TIMESTAMP_NTZ($1:requested_at::VARCHAR),
+          TRY_TO_TIMESTAMP_LTZ($1:_meta:received_at::VARCHAR)
+        FROM @WHITEGOODS_RAW.API_EVENTS.API_EVENTS_STAGE/po_changes/
+      )
+      FILE_FORMAT = (FORMAT_NAME = 'WHITEGOODS_RAW.API_EVENTS.API_EVENTS_JSON_FORMAT')
+  SQL
+}
+
 # ── WHITEGOODS_STREAMLIT_APPS Database ────────────────────────
 resource "snowflake_database" "streamlit_apps" {
   name    = "WHITEGOODS_STREAMLIT_APPS"

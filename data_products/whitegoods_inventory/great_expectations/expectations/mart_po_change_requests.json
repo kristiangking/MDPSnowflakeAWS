@@ -1,0 +1,47 @@
+{
+  "expectation_suite_name": "mart_po_change_requests",
+  "meta": {
+    "great_expectations_version": "0.18.19",
+    "notes": "Validates WHITEGOODS_ANALYTICS.MARTS.MART_PO_CHANGE_REQUESTS — one row per API-submitted PO change request. Table may be empty when no changes have been submitted."
+  },
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "event_id" },
+      "meta": { "notes": "Every change request must have a platform-assigned event ID." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "kwargs": { "column": "event_id" },
+      "meta": { "notes": "Event IDs are UUIDs — duplicates indicate a Snowpipe double-load." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "po_id" },
+      "meta": { "notes": "Every change request must reference a PO." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "supplier_id" },
+      "meta": { "notes": "Every change request must identify the submitting supplier." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "change_type" },
+      "meta": { "notes": "Change type must always be populated." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "change_type",
+        "value_set": ["QUANTITY_CHANGE", "PRICE_CHANGE", "DATE_CHANGE", "CANCELLATION"]
+      },
+      "meta": { "notes": "Change type must be one of the four recognised lifecycle values." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "received_at" },
+      "meta": { "notes": "Platform receive timestamp must always be present (set by the Lambda)." }
+    }
+  ]
+}

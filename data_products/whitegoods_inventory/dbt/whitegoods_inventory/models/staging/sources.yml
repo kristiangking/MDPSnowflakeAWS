@@ -13,6 +13,16 @@ sources:
           freshness:
             warn_after: {count: 25, period: hour}
 
+  - name: whitegoods_raw_api_events
+    database: WHITEGOODS_RAW
+    schema: API_EVENTS
+    description: "Raw events submitted via the platform API ingest endpoint"
+    tables:
+      - name: po_change_requests
+        description: "PO change requests submitted by suppliers — one row per event"
+        config:
+          loaded_at_field: _loaded_at
+
   - name: inventory
     database: WHITEGOODS_RAW
     schema: inventory

@@ -112,3 +112,35 @@ resource "aws_ssm_parameter" "airflow_s3_bucket" {
     ManagedBy   = "terraform-platform"
   }
 }
+
+# ── API Ingest ─────────────────────────────────────────────────
+module "api_ingest" {
+  source      = "./modules/api_ingest"
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+}
+
+resource "aws_ssm_parameter" "api_ingest_endpoint" {
+  name  = "/mdp/platform/api_ingest_endpoint"
+  type  = "String"
+  value = module.api_ingest.endpoint_url
+
+  tags = {
+    Project     = var.project
+    Environment = var.environment
+    ManagedBy   = "terraform-platform"
+  }
+}
+
+resource "aws_ssm_parameter" "api_ingest_key_id" {
+  name  = "/mdp/platform/api_ingest_key_id"
+  type  = "String"
+  value = module.api_ingest.api_key_id
+
+  tags = {
+    Project     = var.project
+    Environment = var.environment
+    ManagedBy   = "terraform-platform"
+  }
+}

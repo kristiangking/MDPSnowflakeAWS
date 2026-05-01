@@ -99,4 +99,11 @@ resource "aws_s3_bucket_notification" "snowpipe" {
     events        = ["s3:ObjectCreated:*"]
     filter_prefix = "great_expectations/results/"
   }
+
+  queue {
+    id            = "snowpipe-po_change_requests"
+    queue_arn     = var.snowpipe_sqs_arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "api_events/po_changes/"
+  }
 }
