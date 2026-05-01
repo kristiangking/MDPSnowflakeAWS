@@ -35,7 +35,7 @@ chown ec2-user:ec2-user /home/ec2-user/datahub/docker-compose.yml
 # to be explicitly provided — it no longer auto-generates one.
 SIGNING_KEY=$(openssl rand -hex 32)
 cat > /home/ec2-user/datahub/.env << ENVFILE
-DATAHUB_TOKEN_SERVICE_SIGNING_KEY=${SIGNING_KEY}
+DATAHUB_TOKEN_SERVICE_SIGNING_KEY=$${SIGNING_KEY}
 ENVFILE
 chown ec2-user:ec2-user /home/ec2-user/datahub/.env
 
