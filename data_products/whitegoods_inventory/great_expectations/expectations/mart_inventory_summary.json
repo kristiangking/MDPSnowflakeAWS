@@ -1,0 +1,49 @@
+{
+  "expectation_suite_name": "mart_inventory_summary",
+  "meta": {
+    "great_expectations_version": "0.18.19",
+    "notes": "Validates WHITEGOODS_ANALYTICS.MARTS.MART_INVENTORY_SUMMARY — current stock levels per product/location."
+  },
+  "expectations": [
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "kwargs": { "min_value": 1 },
+      "meta": { "notes": "Table must have at least one row — indicates pipeline ran successfully." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "product_id" },
+      "meta": { "notes": "Every inventory record must have a product." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "location_id" },
+      "meta": { "notes": "Every inventory record must have a location." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "qty_on_hand" },
+      "meta": { "notes": "Quantity on hand must always be populated." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "qty_on_hand", "min_value": 0 },
+      "meta": { "notes": "Stock quantity cannot be negative." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "unit_cost", "min_value": 0 },
+      "meta": { "notes": "Unit cost must be zero or positive." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "rrp", "min_value": 0 },
+      "meta": { "notes": "Recommended retail price must be zero or positive." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "stock_value_cost" },
+      "meta": { "notes": "Derived stock value (qty * unit_cost) must always be populated." }
+    }
+  ]
+}

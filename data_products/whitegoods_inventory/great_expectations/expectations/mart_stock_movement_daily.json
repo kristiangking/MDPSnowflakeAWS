@@ -1,0 +1,39 @@
+{
+  "expectation_suite_name": "mart_stock_movement_daily",
+  "meta": {
+    "great_expectations_version": "0.18.19",
+    "notes": "Validates WHITEGOODS_ANALYTICS.MARTS.MART_STOCK_MOVEMENT_DAILY — daily stock movement aggregates by location, category and event type."
+  },
+  "expectations": [
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "kwargs": { "min_value": 1 },
+      "meta": { "notes": "Table must have at least one movement row." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "occurred_date" },
+      "meta": { "notes": "Every movement record must have a date." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "location_id" },
+      "meta": { "notes": "Every movement record must have a location." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "event_type" },
+      "meta": { "notes": "Event type must always be populated." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "total_units_moved", "min_value": 0 },
+      "meta": { "notes": "Total units moved is sum(abs(qty_delta)) — must be non-negative." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "event_count", "min_value": 1 },
+      "meta": { "notes": "Each aggregate row must represent at least one event." }
+    }
+  ]
+}

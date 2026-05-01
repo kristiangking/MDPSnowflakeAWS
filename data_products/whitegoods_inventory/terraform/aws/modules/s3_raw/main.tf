@@ -92,4 +92,11 @@ resource "aws_s3_bucket_notification" "snowpipe" {
     events        = ["s3:ObjectCreated:*"]
     filter_prefix = "events/inventory/"
   }
+
+  queue {
+    id            = "snowpipe-gx_validations"
+    queue_arn     = var.snowpipe_sqs_arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "great_expectations/results/"
+  }
 }

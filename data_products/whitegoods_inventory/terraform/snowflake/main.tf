@@ -816,6 +816,192 @@ resource "snowflake_pipe" "inventory_events" {
   SQL
 }
 
+# ── RAW.GX Schema — Great Expectations validation results ──────
+resource "snowflake_schema" "gx" {
+  database = snowflake_database.raw.name
+  name     = "GX"
+  comment  = "Schema for Great Expectations validation results loaded via Snowpipe"
+}
+
+resource "snowflake_grant_privileges_to_account_role" "gx_schema_loader" {
+  account_role_name = snowflake_account_role.loader.name
+  privileges        = ["USAGE", "CREATE TABLE", "CREATE STAGE", "CREATE PIPE"]
+  on_schema {
+    schema_name = "${snowflake_database.raw.name}.${snowflake_schema.gx.name}"
+  }
+}
+
+resource "snowflake_grant_privileges_to_account_role" "gx_schema_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["USAGE"]
+  on_schema {
+    schema_name = "${snowflake_database.raw.name}.${snowflake_schema.gx.name}"
+  }
+}
+
+# ── GX File Format ─────────────────────────────────────────────
+# Results are written as a JSON array (one array per checkpoint run).
+resource "snowflake_file_format" "gx_json" {
+  name              = "GX_JSON_FORMAT"
+  database          = snowflake_database.raw.name
+  schema            = snowflake_schema.gx.name
+  format_type       = "JSON"
+  strip_outer_array = true
+  comment           = "JSON array format for Great Expectations validation result files"
+}
+
+# ── GX External Stage ──────────────────────────────────────────
+# Points at the great_expectations/results/ prefix in the raw bucket.
+resource "snowflake_stage" "gx" {
+  name                = "GX_STAGE"
+  database            = snowflake_database.raw.name
+  schema              = snowflake_schema.gx.name
+  url                 = "s3://${data.aws_ssm_parameter.raw_bucket_name.value}/great_expectations/results/"
+  storage_integration = snowflake_storage_integration.s3_raw.name
+  comment             = "External stage for Great Expectations validation result JSON files"
+}
+
+# ── GX VALIDATIONS Table ───────────────────────────────────────
+# One row per individual expectation result per checkpoint run.
+resource "snowflake_table" "gx_validations" {
+  database = snowflake_database.raw.name
+  schema   = snowflake_schema.gx.name
+  name     = "VALIDATIONS"
+  comment  = "Great Expectations validation results — one row per expectation per run"
+
+  lifecycle { prevent_destroy = true }
+
+  column {
+    name     = "RUN_ID"
+    type     = "VARCHAR(16777216)"
+    nullable = false
+    comment  = "Unique identifier for the checkpoint run (UTC timestamp string)"
+  }
+  column {
+    name     = "CHECKPOINT_NAME"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+  }
+  column {
+    name     = "SUITE_NAME"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "Expectation suite name — maps to a mart table"
+  }
+  column {
+    name     = "DATA_ASSET_NAME"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "Fully qualified table name being validated"
+  }
+  column {
+    name     = "EXPECTATION_TYPE"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "GX expectation type e.g. expect_column_values_to_not_be_null"
+  }
+  column {
+    name     = "COLUMN_NAME"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "Column being validated — null for table-level expectations"
+  }
+  column {
+    name     = "SUCCESS"
+    type     = "BOOLEAN"
+    nullable = true
+  }
+  column {
+    name     = "OBSERVED_VALUE"
+    type     = "VARCHAR(16777216)"
+    nullable = true
+    comment  = "Observed value returned by the expectation (for table-level checks)"
+  }
+  column {
+    name     = "UNEXPECTED_COUNT"
+    type     = "NUMBER(38,0)"
+    nullable = true
+    comment  = "Number of rows that violated the expectation"
+  }
+  column {
+    name     = "UNEXPECTED_PERCENT"
+    type     = "FLOAT"
+    nullable = true
+    comment  = "Percentage of rows that violated the expectation"
+  }
+  column {
+    name     = "RUN_TIME"
+    type     = "TIMESTAMP_NTZ(9)"
+    nullable = true
+    comment  = "UTC timestamp when the validation run started"
+  }
+  column {
+    name     = "_LOADED_AT"
+    type     = "TIMESTAMP_LTZ(9)"
+    nullable = true
+    default { expression = "CURRENT_TIMESTAMP()" }
+  }
+}
+
+# Grant SELECT on GX tables to TRANSFORMER so dbt can build staging models
+resource "snowflake_grant_privileges_to_account_role" "gx_tables_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    all {
+      object_type_plural = "TABLES"
+      in_schema          = "${snowflake_database.raw.name}.${snowflake_schema.gx.name}"
+    }
+  }
+  depends_on = [snowflake_table.gx_validations]
+}
+
+resource "snowflake_grant_privileges_to_account_role" "gx_future_tables_transformer" {
+  account_role_name = snowflake_account_role.transformer.name
+  privileges        = ["SELECT"]
+  on_schema_object {
+    future {
+      object_type_plural = "TABLES"
+      in_schema          = "${snowflake_database.raw.name}.${snowflake_schema.gx.name}"
+    }
+  }
+}
+
+# ── Snowpipe — GX validation results ──────────────────────────
+resource "snowflake_pipe" "gx_validations" {
+  database    = snowflake_database.raw.name
+  schema      = snowflake_schema.gx.name
+  name        = "PIPE_GX_VALIDATIONS"
+  auto_ingest = true
+  comment     = "Snowpipe — loads GX validation result JSON files from S3 great_expectations/results/"
+
+  depends_on = [snowflake_table.gx_validations, snowflake_stage.gx, snowflake_file_format.gx_json]
+
+  copy_statement = <<-SQL
+    COPY INTO WHITEGOODS_RAW.GX.VALIDATIONS (
+        run_id, checkpoint_name, suite_name, data_asset_name,
+        expectation_type, column_name, success, observed_value,
+        unexpected_count, unexpected_percent, run_time
+      )
+      FROM (
+        SELECT
+          $1:run_id::VARCHAR,
+          $1:checkpoint_name::VARCHAR,
+          $1:suite_name::VARCHAR,
+          $1:data_asset_name::VARCHAR,
+          $1:expectation_type::VARCHAR,
+          $1:column_name::VARCHAR,
+          $1:success::BOOLEAN,
+          $1:observed_value::VARCHAR,
+          $1:unexpected_count::NUMBER,
+          $1:unexpected_percent::FLOAT,
+          $1:run_time::TIMESTAMP_NTZ
+        FROM @WHITEGOODS_RAW.GX.GX_STAGE/
+      )
+      FILE_FORMAT = (FORMAT_NAME = 'WHITEGOODS_RAW.GX.GX_JSON_FORMAT')
+  SQL
+}
+
 # ── WHITEGOODS_STREAMLIT_APPS Database ────────────────────────
 resource "snowflake_database" "streamlit_apps" {
   name    = "WHITEGOODS_STREAMLIT_APPS"

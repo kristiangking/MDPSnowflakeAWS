@@ -58,6 +58,10 @@ chmod -R 775 \
   /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/dbt/whitegoods_inventory/logs \
   /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/dbt/whitegoods_inventory/dbt_packages
 
+# GX directory is read-only for the container — no writable subdirs needed
+mkdir -p /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/great_expectations
+chown -R 50000:0 /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/great_expectations
+
 # Create Airflow directory structure
 mkdir -p /home/ec2-user/airflow/{dags,logs,plugins}
 
@@ -89,10 +93,10 @@ cat > /home/ec2-user/airflow/.env << 'ENVFILE'
 AIRFLOW_UID=50000
 ENVFILE
 
-# Create a custom Airflow image with dbt-snowflake baked in
+# Create a custom Airflow image with dbt-snowflake and Great Expectations baked in
 cat > /home/ec2-user/airflow/Dockerfile << 'DOCKERFILE'
 FROM apache/airflow:2.10.3
-RUN pip install dbt-snowflake awscli
+RUN pip install dbt-snowflake awscli "great-expectations==0.18.19" snowflake-sqlalchemy
 DOCKERFILE
 
 # Build the custom image
@@ -126,6 +130,7 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/dbt/whitegoods_inventory:/opt/airflow/dbt/whitegoods_inventory
+      - /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/great_expectations:/opt/airflow/great_expectations/whitegoods_inventory
       - /home/ec2-user/.dbt:/home/airflow/.dbt
     entrypoint: /bin/bash
     command: -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com || true"
@@ -146,6 +151,7 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/dbt/whitegoods_inventory:/opt/airflow/dbt/whitegoods_inventory
+      - /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/great_expectations:/opt/airflow/great_expectations/whitegoods_inventory
       - /home/ec2-user/.dbt:/home/airflow/.dbt
     ports:
       - "8080:8080"
@@ -172,6 +178,7 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/dbt/whitegoods_inventory:/opt/airflow/dbt/whitegoods_inventory
+      - /home/ec2-user/MDPSnowflakeAWS/data_products/whitegoods_inventory/great_expectations:/opt/airflow/great_expectations/whitegoods_inventory
       - /home/ec2-user/.dbt:/home/airflow/.dbt
     command: scheduler
     restart: always

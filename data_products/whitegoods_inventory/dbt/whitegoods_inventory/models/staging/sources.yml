@@ -1,6 +1,18 @@
 version: 2
 
 sources:
+  - name: gx
+    database: WHITEGOODS_RAW
+    schema: GX
+    description: "Great Expectations validation results loaded via Snowpipe from S3"
+    tables:
+      - name: validations
+        description: "One row per individual expectation result per checkpoint run"
+        config:
+          loaded_at_field: _loaded_at
+          freshness:
+            warn_after: {count: 25, period: hour}
+
   - name: inventory
     database: WHITEGOODS_RAW
     schema: inventory

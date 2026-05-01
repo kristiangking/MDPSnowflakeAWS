@@ -1,7 +1,20 @@
 """
 DAG: whitegoods_dbt_pipeline
-Runs the full dbt build for the whitegoods_inventory project.
+Runs the full dbt build + Great Expectations data quality checks for the
+whitegoods_inventory data product.
+
 Schedule: daily at 06:00 AEST (20:00 UTC)
+
+Pipeline:
+  start
+  → dbt_source_freshness
+  → dbt_run_staging
+  → dbt_run_intermediate
+  → dbt_run_marts
+  → [gx_checkpoint, dbt_test]  (parallel — GX validates marts, dbt tests run schema tests)
+  → dbt_docs_generate
+  → upload_dbt_artifacts        (manifest + catalog to S3 for DataHub lineage)
+  → end
 """
 
 from datetime import datetime, timedelta
@@ -13,6 +26,7 @@ from airflow.utils.dates import days_ago
 DBT_PROJECT_DIR = "/opt/airflow/dbt/whitegoods_inventory"
 DBT_PROFILES_DIR = "/home/airflow/.dbt"
 DBT_BIN = "/home/airflow/.local/bin/dbt"
+GX_DIR = "/opt/airflow/great_expectations/whitegoods_inventory"
 
 default_args = {
     "owner": "data-platform",
@@ -82,6 +96,20 @@ with DAG(
         ),
     )
 
+    # --- Great Expectations checkpoint ---
+    # Runs after marts are built. Validates each mart table against its
+    # expectation suite, writes results to s3://<raw-bucket>/great_expectations/results/
+    # which Snowpipe loads into WHITEGOODS_RAW.GX.VALIDATIONS for trend dashboarding.
+    gx_checkpoint = BashOperator(
+        task_id="gx_checkpoint",
+        bash_command=(
+            f"python {GX_DIR}/run_gx_checkpoint.py "
+            f"--profiles-dir {DBT_PROFILES_DIR} "
+            f"--gx-dir {GX_DIR} "
+            f"--region ap-southeast-2 "
+        ),
+    )
+
     # --- dbt tests ---
     dbt_test = BashOperator(
         task_id="dbt_test",
@@ -124,13 +152,15 @@ with DAG(
     end = EmptyOperator(task_id="end")
 
     # --- DAG dependency chain ---
+    # gx_checkpoint and dbt_test run in parallel after marts are built,
+    # then both must complete before docs are generated.
     (
         start
         >> dbt_source_freshness
         >> dbt_run_staging
         >> dbt_run_intermediate
         >> dbt_run_marts
-        >> dbt_test
+        >> [gx_checkpoint, dbt_test]
         >> dbt_docs_generate
         >> upload_dbt_artifacts
         >> end

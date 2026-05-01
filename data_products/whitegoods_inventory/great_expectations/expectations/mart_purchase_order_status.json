@@ -1,0 +1,50 @@
+{
+  "expectation_suite_name": "mart_purchase_order_status",
+  "meta": {
+    "great_expectations_version": "0.18.19",
+    "notes": "Validates WHITEGOODS_ANALYTICS.MARTS.MART_PURCHASE_ORDER_STATUS — one row per purchase order."
+  },
+  "expectations": [
+    {
+      "expectation_type": "expect_table_row_count_to_be_between",
+      "kwargs": { "min_value": 1 },
+      "meta": { "notes": "Table must have at least one purchase order." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "po_id" },
+      "meta": { "notes": "Every purchase order must have a PO ID." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "supplier_id" },
+      "meta": { "notes": "Every PO must reference a supplier." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": { "column": "status" },
+      "meta": { "notes": "PO status must always be populated." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "status",
+        "value_set": ["PENDING", "RECEIVED", "CANCELLED", "PARTIAL"]
+      },
+      "meta": { "notes": "PO status must be one of the four valid lifecycle values." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": { "column": "total_value", "min_value": 0 },
+      "meta": { "notes": "PO total value must be zero or positive." }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_in_set",
+      "kwargs": {
+        "column": "delivery_performance",
+        "value_set": ["Pending", "On Time", "Late"]
+      },
+      "meta": { "notes": "Delivery performance classification must be one of the three valid values." }
+    }
+  ]
+}
