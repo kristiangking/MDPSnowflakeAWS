@@ -11,6 +11,7 @@ data_products/whitegoods_inventory/dbt/whitegoods_inventory/venv/
 *.tfstate.*.backup
 *.tfvars
 .terraform.lock.hcl
+.terraform.tfstate.lock.info
 
 # Lambda build artifacts
 lambda/**/.venv/
