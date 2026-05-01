@@ -47,11 +47,11 @@ cat > /home/ec2-user/datahub/docker-compose.override.yml << 'OVERRIDE'
 services:
   datahub-upgrade:
     environment:
-      - DATAHUB_TOKEN_SERVICE_SIGNING_KEY=${DATAHUB_TOKEN_SERVICE_SIGNING_KEY}
+      - DATAHUB_TOKEN_SERVICE_SIGNING_KEY=$${DATAHUB_TOKEN_SERVICE_SIGNING_KEY}
       - METADATA_SERVICE_AUTH_ENABLED=false
   datahub-gms:
     environment:
-      - DATAHUB_TOKEN_SERVICE_SIGNING_KEY=${DATAHUB_TOKEN_SERVICE_SIGNING_KEY}
+      - DATAHUB_TOKEN_SERVICE_SIGNING_KEY=$${DATAHUB_TOKEN_SERVICE_SIGNING_KEY}
 OVERRIDE
 chown ec2-user:ec2-user /home/ec2-user/datahub/docker-compose.override.yml
 
